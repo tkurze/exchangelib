@@ -129,25 +129,6 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             if f.parent.id == folder.id:
                 yield f
 
-    @classmethod
-    def get_distinguished(cls, account):
-        &#34;&#34;&#34;Get the distinguished folder for this folder class.
-
-        :param account:
-        &#34;&#34;&#34;
-        if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
-
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type &#39;folder_cls&#39;
@@ -164,16 +145,16 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
                     return f
         try:
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-            return folder_cls.get_distinguished(account=self.account)
+            return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
             fld = folder_cls(
-                root=self,
                 _distinguished_id=DistinguishedFolderId(
                     id=folder_cls.DISTINGUISHED_FOLDER_ID,
                     mailbox=Mailbox(email_address=self.account.primary_smtp_address),
                 ),
+                root=self,
             )
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
@@ -181,6 +162,23 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             # The Exchange server does not return a distinguished folder of this type
             pass
         raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
+
+    @classmethod
+    def get_distinguished(cls, account):
+        &#34;&#34;&#34;Get the distinguished folder for this folder class.
+
+        :param account:
+        :return:
+        &#34;&#34;&#34;
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
+                ),
+                account=account,
+            )
+        )
 
     @property
     def _folders_map(self):
@@ -192,9 +190,12 @@ class RootOfHierarchy(BaseFolder, metaclass=EWSMeta):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                cls(
+                    _distinguished_id=DistinguishedFolderId(
+                        id=cls.DISTINGUISHED_FOLDER_ID,
+                        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                    ),
+                    root=self,
                 )
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)
@@ -354,6 +355,11 @@ class PublicFoldersRoot(RootOfHierarchy):
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self._distinguished_id:
+            self._distinguished_id.mailbox = None  # See DistinguishedFolderId.clean()
+
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
         # subfolders. To traverse public folders at arbitrary depth, we need to get child folders on demand.
@@ -506,6 +512,11 @@ class ArchiveRoot(RootOfHierarchy):
     DISTINGUISHED_FOLDER_ID = &#34;publicfoldersroot&#34;
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self._distinguished_id:
+            self._distinguished_id.mailbox = None  # See DistinguishedFolderId.clean()
 
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
@@ -894,25 +905,6 @@ def tois(self):
             if f.parent.id == folder.id:
                 yield f
 
-    @classmethod
-    def get_distinguished(cls, account):
-        &#34;&#34;&#34;Get the distinguished folder for this folder class.
-
-        :param account:
-        &#34;&#34;&#34;
-        if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
-
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type &#39;folder_cls&#39;
@@ -929,16 +921,16 @@ def tois(self):
                     return f
         try:
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-            return folder_cls.get_distinguished(account=self.account)
+            return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
             fld = folder_cls(
-                root=self,
                 _distinguished_id=DistinguishedFolderId(
                     id=folder_cls.DISTINGUISHED_FOLDER_ID,
                     mailbox=Mailbox(email_address=self.account.primary_smtp_address),
                 ),
+                root=self,
             )
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
@@ -946,6 +938,23 @@ def tois(self):
             # The Exchange server does not return a distinguished folder of this type
             pass
         raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
+
+    @classmethod
+    def get_distinguished(cls, account):
+        &#34;&#34;&#34;Get the distinguished folder for this folder class.
+
+        :param account:
+        :return:
+        &#34;&#34;&#34;
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
+                ),
+                account=account,
+            )
+        )
 
     @property
     def _folders_map(self):
@@ -957,9 +966,12 @@ def tois(self):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                cls(
+                    _distinguished_id=DistinguishedFolderId(
+                        id=cls.DISTINGUISHED_FOLDER_ID,
+                        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                    ),
+                    root=self,
                 )
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)
@@ -1139,7 +1151,8 @@ def from_xml(cls, elem, account):
 </code></dt>
 <dd>
 <div class="desc"><p>Get the distinguished folder for this folder class.</p>
-<p>:param account:</p></div>
+<p>:param account:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1149,19 +1162,17 @@ def get_distinguished(cls, account):
     &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
     :param account:
+    :return:
     &#34;&#34;&#34;
-    if not cls.DISTINGUISHED_FOLDER_ID:
-        raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
-    try:
-        return cls.resolve(
-            account=account,
-            folder=DistinguishedFolderId(
+    return cls._get_distinguished(
+        folder=cls(
+            _distinguished_id=DistinguishedFolderId(
                 id=cls.DISTINGUISHED_FOLDER_ID,
                 mailbox=Mailbox(email_address=account.primary_smtp_address),
             ),
+            account=account,
         )
-    except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)</code></pre>
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -1246,16 +1257,16 @@ folder was found, try as best we can to return the default folder of type 'folde
                 return f
     try:
         log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-        return folder_cls.get_distinguished(account=self.account)
+        return folder_cls.get_distinguished(root=self)
     except ErrorAccessDenied:
         # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
         log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
         fld = folder_cls(
-            root=self,
             _distinguished_id=DistinguishedFolderId(
                 id=folder_cls.DISTINGUISHED_FOLDER_ID,
                 mailbox=Mailbox(email_address=self.account.primary_smtp_address),
             ),
+            root=self,
         )
         fld.test_access()
         return self._folders_map.get(fld.id, fld)  # Use cached instance if available

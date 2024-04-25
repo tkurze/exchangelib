@@ -61,6 +61,16 @@ class EmailAddress(SingleFieldIndexedElement):
     email = EmailSubField(is_required=True)
 
 
+class ImAddress(SingleFieldIndexedElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-imaddress&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;Entry&#34;
+    LABEL_CHOICES = (&#34;ImAddress1&#34;, &#34;ImAddress2&#34;, &#34;ImAddress3&#34;)
+
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    im_address = SubField(is_required=True)
+
+
 class PhoneNumber(SingleFieldIndexedElement):
     &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-phonenumber&#34;&#34;&#34;
 
@@ -170,6 +180,69 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.indexed_properties.EmailAddress.label"><code class="name">var <span class="ident">label</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.indexed_properties.SingleFieldIndexedElement" href="#exchangelib.indexed_properties.SingleFieldIndexedElement">SingleFieldIndexedElement</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.indexed_properties.SingleFieldIndexedElement.add_field" href="properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.SingleFieldIndexedElement.remove_field" href="properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.SingleFieldIndexedElement.supported_fields" href="properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.SingleFieldIndexedElement.validate_field" href="properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.indexed_properties.ImAddress"><code class="flex name class">
+<span>class <span class="ident">ImAddress</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-imaddress">https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-imaddress</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ImAddress(SingleFieldIndexedElement):
+    &#34;&#34;&#34;MSDN: https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/entry-imaddress&#34;&#34;&#34;
+
+    ELEMENT_NAME = &#34;Entry&#34;
+    LABEL_CHOICES = (&#34;ImAddress1&#34;, &#34;ImAddress2&#34;, &#34;ImAddress3&#34;)
+
+    label = LabelField(field_uri=&#34;Key&#34;, choices={Choice(c) for c in LABEL_CHOICES}, default=LABEL_CHOICES[0])
+    im_address = SubField(is_required=True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.indexed_properties.SingleFieldIndexedElement" href="#exchangelib.indexed_properties.SingleFieldIndexedElement">SingleFieldIndexedElement</a></li>
+<li><a title="exchangelib.indexed_properties.IndexedElement" href="#exchangelib.indexed_properties.IndexedElement">IndexedElement</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.indexed_properties.ImAddress.ELEMENT_NAME"><code class="name">var <span class="ident">ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.indexed_properties.ImAddress.FIELDS"><code class="name">var <span class="ident">FIELDS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.indexed_properties.ImAddress.LABEL_CHOICES"><code class="name">var <span class="ident">LABEL_CHOICES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="exchangelib.indexed_properties.ImAddress.im_address"><code class="name">var <span class="ident">im_address</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.indexed_properties.ImAddress.label"><code class="name">var <span class="ident">label</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -480,6 +553,7 @@ class PhysicalAddress(MultiFieldIndexedElement):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="exchangelib.indexed_properties.EmailAddress" href="#exchangelib.indexed_properties.EmailAddress">EmailAddress</a></li>
+<li><a title="exchangelib.indexed_properties.ImAddress" href="#exchangelib.indexed_properties.ImAddress">ImAddress</a></li>
 <li><a title="exchangelib.indexed_properties.PhoneNumber" href="#exchangelib.indexed_properties.PhoneNumber">PhoneNumber</a></li>
 </ul>
 <h3>Static methods</h3>
@@ -538,6 +612,16 @@ def value_field(cls, version):
 <li><code><a title="exchangelib.indexed_properties.EmailAddress.LABEL_CHOICES" href="#exchangelib.indexed_properties.EmailAddress.LABEL_CHOICES">LABEL_CHOICES</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.EmailAddress.email" href="#exchangelib.indexed_properties.EmailAddress.email">email</a></code></li>
 <li><code><a title="exchangelib.indexed_properties.EmailAddress.label" href="#exchangelib.indexed_properties.EmailAddress.label">label</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.indexed_properties.ImAddress" href="#exchangelib.indexed_properties.ImAddress">ImAddress</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.indexed_properties.ImAddress.ELEMENT_NAME" href="#exchangelib.indexed_properties.ImAddress.ELEMENT_NAME">ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.ImAddress.FIELDS" href="#exchangelib.indexed_properties.ImAddress.FIELDS">FIELDS</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.ImAddress.LABEL_CHOICES" href="#exchangelib.indexed_properties.ImAddress.LABEL_CHOICES">LABEL_CHOICES</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.ImAddress.im_address" href="#exchangelib.indexed_properties.ImAddress.im_address">im_address</a></code></li>
+<li><code><a title="exchangelib.indexed_properties.ImAddress.label" href="#exchangelib.indexed_properties.ImAddress.label">label</a></code></li>
 </ul>
 </li>
 <li>

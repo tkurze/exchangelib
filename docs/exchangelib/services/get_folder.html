@@ -80,7 +80,7 @@ class GetFolder(EWSAccountService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     def get_payload(self, folders, additional_fields, shape):
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
@@ -155,7 +155,7 @@ class GetFolder(EWSAccountService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     def get_payload(self, folders, additional_fields, shape):
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)

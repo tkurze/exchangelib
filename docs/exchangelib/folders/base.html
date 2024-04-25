@@ -122,6 +122,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         self.item_sync_state = kwargs.pop(&#34;item_sync_state&#34;, None)
         self.folder_sync_state = kwargs.pop(&#34;folder_sync_state&#34;, None)
         super().__init__(**kwargs)
+        if self._distinguished_id and self.account:
+            self._distinguished_id.mailbox = Mailbox(email_address=self.account.primary_smtp_address)
 
     @property
     @abc.abstractmethod
@@ -240,6 +242,15 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
                 else:  # Last child and not name of child
                     tree += f&#34;    {node}\n&#34;
         return tree.strip()
+
+    @classmethod
+    def _get_distinguished(cls, folder):
+        if not cls.DISTINGUISHED_FOLDER_ID:
+            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
+        try:
+            return cls.resolve(account=folder.account, folder=folder)
+        except MISSING_FOLDER_ERRORS as e:
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r} ({e})&#34;)
 
     @property
     def has_distinguished_name(self):
@@ -852,7 +863,7 @@ class Folder(BaseFolder):
                 if parent.root != self.root:
                     raise ValueError(&#34;&#39;parent.root&#39; must match &#39;root&#39;&#34;)
             else:
-                self.root = parent.root
+                self._root = parent.root
             if &#34;parent_folder_id&#34; in kwargs and parent.id != kwargs[&#34;parent_folder_id&#34;]:
                 raise ValueError(&#34;&#39;parent_folder_id&#39; must match &#39;parent&#39; ID&#34;)
             kwargs[&#34;parent_folder_id&#34;] = ParentFolderId(id=parent.id, changekey=parent.changekey)
@@ -868,10 +879,6 @@ class Folder(BaseFolder):
     def root(self):
         return self._root
 
-    @root.setter
-    def root(self, value):
-        self._root = value
-
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not Folder:
@@ -883,24 +890,6 @@ class Folder(BaseFolder):
         if cls is not Folder:
             raise TypeError(&#34;For folders, custom fields must be registered on the Folder class&#34;)
         return super().deregister(*args, **kwargs)
-
-    @classmethod
-    def get_distinguished(cls, account):
-        &#34;&#34;&#34;Get the distinguished folder for this folder class.
-
-        :param account:
-        :return:
-        &#34;&#34;&#34;
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)
 
     @property
     def parent(self):
@@ -918,7 +907,7 @@ class Folder(BaseFolder):
         else:
             if not isinstance(value, BaseFolder):
                 raise InvalidTypeError(&#34;value&#34;, value, BaseFolder)
-            self.root = value.root
+            self._root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
@@ -927,6 +916,23 @@ class Folder(BaseFolder):
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
             raise InvalidTypeError(&#34;root&#34;, self.root, RootOfHierarchy)
+
+    @classmethod
+    def get_distinguished(cls, root):
+        &#34;&#34;&#34;Get the distinguished folder for this folder class.
+
+        :param root:
+        :return:
+        &#34;&#34;&#34;
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+                root=root,
+            )
+        )
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
@@ -1025,6 +1031,8 @@ class Folder(BaseFolder):
         self.item_sync_state = kwargs.pop(&#34;item_sync_state&#34;, None)
         self.folder_sync_state = kwargs.pop(&#34;folder_sync_state&#34;, None)
         super().__init__(**kwargs)
+        if self._distinguished_id and self.account:
+            self._distinguished_id.mailbox = Mailbox(email_address=self.account.primary_smtp_address)
 
     @property
     @abc.abstractmethod
@@ -1143,6 +1151,15 @@ class Folder(BaseFolder):
                 else:  # Last child and not name of child
                     tree += f&#34;    {node}\n&#34;
         return tree.strip()
+
+    @classmethod
+    def _get_distinguished(cls, folder):
+        if not cls.DISTINGUISHED_FOLDER_ID:
+            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
+        try:
+            return cls.resolve(account=folder.account, folder=folder)
+        except MISSING_FOLDER_ERRORS as e:
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r} ({e})&#34;)
 
     @property
     def has_distinguished_name(self):
@@ -2975,7 +2992,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
                 if parent.root != self.root:
                     raise ValueError(&#34;&#39;parent.root&#39; must match &#39;root&#39;&#34;)
             else:
-                self.root = parent.root
+                self._root = parent.root
             if &#34;parent_folder_id&#34; in kwargs and parent.id != kwargs[&#34;parent_folder_id&#34;]:
                 raise ValueError(&#34;&#39;parent_folder_id&#39; must match &#39;parent&#39; ID&#34;)
             kwargs[&#34;parent_folder_id&#34;] = ParentFolderId(id=parent.id, changekey=parent.changekey)
@@ -2991,10 +3008,6 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
     def root(self):
         return self._root
 
-    @root.setter
-    def root(self, value):
-        self._root = value
-
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not Folder:
@@ -3006,24 +3019,6 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         if cls is not Folder:
             raise TypeError(&#34;For folders, custom fields must be registered on the Folder class&#34;)
         return super().deregister(*args, **kwargs)
-
-    @classmethod
-    def get_distinguished(cls, account):
-        &#34;&#34;&#34;Get the distinguished folder for this folder class.
-
-        :param account:
-        :return:
-        &#34;&#34;&#34;
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)
 
     @property
     def parent(self):
@@ -3041,7 +3036,7 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         else:
             if not isinstance(value, BaseFolder):
                 raise InvalidTypeError(&#34;value&#34;, value, BaseFolder)
-            self.root = value.root
+            self._root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
@@ -3050,6 +3045,23 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
             raise InvalidTypeError(&#34;root&#34;, self.root, RootOfHierarchy)
+
+    @classmethod
+    def get_distinguished(cls, root):
+        &#34;&#34;&#34;Get the distinguished folder for this folder class.
+
+        :param root:
+        :return:
+        &#34;&#34;&#34;
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+                root=root,
+            )
+        )
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
@@ -3173,33 +3185,32 @@ def from_xml_with_root(cls, elem, root):
 </details>
 </dd>
 <dt id="exchangelib.folders.base.Folder.get_distinguished"><code class="name flex">
-<span>def <span class="ident">get_distinguished</span></span>(<span>account)</span>
+<span>def <span class="ident">get_distinguished</span></span>(<span>root)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the distinguished folder for this folder class.</p>
-<p>:param account:
+<p>:param root:
 :return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def get_distinguished(cls, account):
+def get_distinguished(cls, root):
     &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
-    :param account:
+    :param root:
     :return:
     &#34;&#34;&#34;
-    try:
-        return cls.resolve(
-            account=account,
-            folder=DistinguishedFolderId(
+    return cls._get_distinguished(
+        folder=cls(
+            _distinguished_id=DistinguishedFolderId(
                 id=cls.DISTINGUISHED_FOLDER_ID,
-                mailbox=Mailbox(email_address=account.primary_smtp_address),
+                mailbox=Mailbox(email_address=root.account.primary_smtp_address),
             ),
+            root=root,
         )
-    except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)</code></pre>
+    )</code></pre>
 </details>
 </dd>
 </dl>

@@ -172,7 +172,7 @@ class UpdateFolder(BaseUpdateService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     @staticmethod
     def _target_elem(target):
@@ -396,7 +396,7 @@ class UpdateFolder(BaseUpdateService):
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     @staticmethod
     def _target_elem(target):

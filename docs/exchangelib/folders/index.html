@@ -1545,6 +1545,8 @@ __all__ = [
         self.item_sync_state = kwargs.pop(&#34;item_sync_state&#34;, None)
         self.folder_sync_state = kwargs.pop(&#34;folder_sync_state&#34;, None)
         super().__init__(**kwargs)
+        if self._distinguished_id and self.account:
+            self._distinguished_id.mailbox = Mailbox(email_address=self.account.primary_smtp_address)
 
     @property
     @abc.abstractmethod
@@ -1663,6 +1665,15 @@ __all__ = [
                 else:  # Last child and not name of child
                     tree += f&#34;    {node}\n&#34;
         return tree.strip()
+
+    @classmethod
+    def _get_distinguished(cls, folder):
+        if not cls.DISTINGUISHED_FOLDER_ID:
+            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
+        try:
+            return cls.resolve(account=folder.account, folder=folder)
+        except MISSING_FOLDER_ERRORS as e:
+            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r} ({e})&#34;)
 
     @property
     def has_distinguished_name(self):
@@ -4611,7 +4622,9 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
         super().clean(version=version)
         if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
             # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
-            self.mailbox = None</code></pre>
+            self.mailbox = None
+        elif not self.mailbox:
+            raise ValueError(f&#34;DistinguishedFolderId {self.id} must have a mailbox&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4672,7 +4685,9 @@ def from_xml(cls, elem, account):
     super().clean(version=version)
     if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
         # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
-        self.mailbox = None</code></pre>
+        self.mailbox = None
+    elif not self.mailbox:
+        raise ValueError(f&#34;DistinguishedFolderId {self.id} must have a mailbox&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -5246,7 +5261,7 @@ def from_xml(cls, elem, account):
                 if parent.root != self.root:
                     raise ValueError(&#34;&#39;parent.root&#39; must match &#39;root&#39;&#34;)
             else:
-                self.root = parent.root
+                self._root = parent.root
             if &#34;parent_folder_id&#34; in kwargs and parent.id != kwargs[&#34;parent_folder_id&#34;]:
                 raise ValueError(&#34;&#39;parent_folder_id&#39; must match &#39;parent&#39; ID&#34;)
             kwargs[&#34;parent_folder_id&#34;] = ParentFolderId(id=parent.id, changekey=parent.changekey)
@@ -5262,10 +5277,6 @@ def from_xml(cls, elem, account):
     def root(self):
         return self._root
 
-    @root.setter
-    def root(self, value):
-        self._root = value
-
     @classmethod
     def register(cls, *args, **kwargs):
         if cls is not Folder:
@@ -5277,24 +5288,6 @@ def from_xml(cls, elem, account):
         if cls is not Folder:
             raise TypeError(&#34;For folders, custom fields must be registered on the Folder class&#34;)
         return super().deregister(*args, **kwargs)
-
-    @classmethod
-    def get_distinguished(cls, account):
-        &#34;&#34;&#34;Get the distinguished folder for this folder class.
-
-        :param account:
-        :return:
-        &#34;&#34;&#34;
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)
 
     @property
     def parent(self):
@@ -5312,7 +5305,7 @@ def from_xml(cls, elem, account):
         else:
             if not isinstance(value, BaseFolder):
                 raise InvalidTypeError(&#34;value&#34;, value, BaseFolder)
-            self.root = value.root
+            self._root = value.root
             self.parent_folder_id = ParentFolderId(id=value.id, changekey=value.changekey)
 
     def clean(self, version=None):
@@ -5321,6 +5314,23 @@ def from_xml(cls, elem, account):
         super().clean(version=version)
         if self.root and not isinstance(self.root, RootOfHierarchy):
             raise InvalidTypeError(&#34;root&#34;, self.root, RootOfHierarchy)
+
+    @classmethod
+    def get_distinguished(cls, root):
+        &#34;&#34;&#34;Get the distinguished folder for this folder class.
+
+        :param root:
+        :return:
+        &#34;&#34;&#34;
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=root.account.primary_smtp_address),
+                ),
+                root=root,
+            )
+        )
 
     @classmethod
     def from_xml_with_root(cls, elem, root):
@@ -5444,33 +5454,32 @@ def from_xml_with_root(cls, elem, root):
 </details>
 </dd>
 <dt id="exchangelib.folders.Folder.get_distinguished"><code class="name flex">
-<span>def <span class="ident">get_distinguished</span></span>(<span>account)</span>
+<span>def <span class="ident">get_distinguished</span></span>(<span>root)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the distinguished folder for this folder class.</p>
-<p>:param account:
+<p>:param root:
 :return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def get_distinguished(cls, account):
+def get_distinguished(cls, root):
     &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
-    :param account:
+    :param root:
     :return:
     &#34;&#34;&#34;
-    try:
-        return cls.resolve(
-            account=account,
-            folder=DistinguishedFolderId(
+    return cls._get_distinguished(
+        folder=cls(
+            _distinguished_id=DistinguishedFolderId(
                 id=cls.DISTINGUISHED_FOLDER_ID,
-                mailbox=Mailbox(email_address=account.primary_smtp_address),
+                mailbox=Mailbox(email_address=root.account.primary_smtp_address),
             ),
+            root=root,
         )
-    except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID!r}&#34;)</code></pre>
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -6972,11 +6981,23 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
         &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
         MultipleObjectsReturned if there are multiple results.
         &#34;&#34;&#34;
+        from .base import Folder
         from .collections import FolderCollection
 
         if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+            roots = {f.root for f in self.folder_collection.folders}
+            if len(roots) != 1:
+                raise ValueError(f&#34;All folders must have the same root hierarchy ({roots})&#34;)
             folders = list(
-                FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+                FolderCollection(
+                    account=self.folder_collection.account,
+                    folders=[
+                        Folder(
+                            _id=FolderId(**kwargs),
+                            root=roots.pop(),
+                        )
+                    ],
+                ).resolve()
             )
         elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
@@ -7128,11 +7149,23 @@ MultipleObjectsReturned if there are multiple results.</p></div>
     &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
     MultipleObjectsReturned if there are multiple results.
     &#34;&#34;&#34;
+    from .base import Folder
     from .collections import FolderCollection
 
     if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+        roots = {f.root for f in self.folder_collection.folders}
+        if len(roots) != 1:
+            raise ValueError(f&#34;All folders must have the same root hierarchy ({roots})&#34;)
         folders = list(
-            FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+            FolderCollection(
+                account=self.folder_collection.account,
+                folders=[
+                    Folder(
+                        _id=FolderId(**kwargs),
+                        root=roots.pop(),
+                    )
+                ],
+            ).resolve()
         )
     elif args or kwargs:
         folders = list(self.filter(*args, **kwargs))
@@ -9354,6 +9387,11 @@ def is_deletable(self):
     DEFAULT_FOLDER_TRAVERSAL_DEPTH = SHALLOW
     supported_from = EXCHANGE_2007_SP1
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self._distinguished_id:
+            self._distinguished_id.mailbox = None  # See DistinguishedFolderId.clean()
+
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
         # subfolders. To traverse public folders at arbitrary depth, we need to get child folders on demand.
@@ -10998,25 +11036,6 @@ def tois(self):
             if f.parent.id == folder.id:
                 yield f
 
-    @classmethod
-    def get_distinguished(cls, account):
-        &#34;&#34;&#34;Get the distinguished folder for this folder class.
-
-        :param account:
-        &#34;&#34;&#34;
-        if not cls.DISTINGUISHED_FOLDER_ID:
-            raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
-        try:
-            return cls.resolve(
-                account=account,
-                folder=DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=account.primary_smtp_address),
-                ),
-            )
-        except MISSING_FOLDER_ERRORS:
-            raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)
-
     def get_default_folder(self, folder_cls):
         &#34;&#34;&#34;Return the distinguished folder instance of type folder_cls belonging to this account. If no distinguished
         folder was found, try as best we can to return the default folder of type &#39;folder_cls&#39;
@@ -11033,16 +11052,16 @@ def tois(self):
                     return f
         try:
             log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-            return folder_cls.get_distinguished(account=self.account)
+            return folder_cls.get_distinguished(root=self)
         except ErrorAccessDenied:
             # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
             log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
             fld = folder_cls(
-                root=self,
                 _distinguished_id=DistinguishedFolderId(
                     id=folder_cls.DISTINGUISHED_FOLDER_ID,
                     mailbox=Mailbox(email_address=self.account.primary_smtp_address),
                 ),
+                root=self,
             )
             fld.test_access()
             return self._folders_map.get(fld.id, fld)  # Use cached instance if available
@@ -11050,6 +11069,23 @@ def tois(self):
             # The Exchange server does not return a distinguished folder of this type
             pass
         raise ErrorFolderNotFound(f&#34;No usable default {folder_cls} folders&#34;)
+
+    @classmethod
+    def get_distinguished(cls, account):
+        &#34;&#34;&#34;Get the distinguished folder for this folder class.
+
+        :param account:
+        :return:
+        &#34;&#34;&#34;
+        return cls._get_distinguished(
+            folder=cls(
+                _distinguished_id=DistinguishedFolderId(
+                    id=cls.DISTINGUISHED_FOLDER_ID,
+                    mailbox=Mailbox(email_address=account.primary_smtp_address),
+                ),
+                account=account,
+            )
+        )
 
     @property
     def _folders_map(self):
@@ -11061,9 +11097,12 @@ def tois(self):
             # so we are sure to apply the correct Folder class, then fetch all sub-folders of this root.
             folders_map = {self.id: self}
             distinguished_folders = [
-                DistinguishedFolderId(
-                    id=cls.DISTINGUISHED_FOLDER_ID,
-                    mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                cls(
+                    _distinguished_id=DistinguishedFolderId(
+                        id=cls.DISTINGUISHED_FOLDER_ID,
+                        mailbox=Mailbox(email_address=self.account.primary_smtp_address),
+                    ),
+                    root=self,
                 )
                 for cls in self.WELLKNOWN_FOLDERS
                 if cls.get_folder_allowed and cls.supports_version(self.account.version)
@@ -11243,7 +11282,8 @@ def from_xml(cls, elem, account):
 </code></dt>
 <dd>
 <div class="desc"><p>Get the distinguished folder for this folder class.</p>
-<p>:param account:</p></div>
+<p>:param account:
+:return:</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -11253,19 +11293,17 @@ def get_distinguished(cls, account):
     &#34;&#34;&#34;Get the distinguished folder for this folder class.
 
     :param account:
+    :return:
     &#34;&#34;&#34;
-    if not cls.DISTINGUISHED_FOLDER_ID:
-        raise ValueError(f&#34;Class {cls} must have a DISTINGUISHED_FOLDER_ID value&#34;)
-    try:
-        return cls.resolve(
-            account=account,
-            folder=DistinguishedFolderId(
+    return cls._get_distinguished(
+        folder=cls(
+            _distinguished_id=DistinguishedFolderId(
                 id=cls.DISTINGUISHED_FOLDER_ID,
                 mailbox=Mailbox(email_address=account.primary_smtp_address),
             ),
+            account=account,
         )
-    except MISSING_FOLDER_ERRORS:
-        raise ErrorFolderNotFound(f&#34;Could not find distinguished folder {cls.DISTINGUISHED_FOLDER_ID}&#34;)</code></pre>
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -11350,16 +11388,16 @@ folder was found, try as best we can to return the default folder of type 'folde
                 return f
     try:
         log.debug(&#34;Requesting distinguished %s folder explicitly&#34;, folder_cls)
-        return folder_cls.get_distinguished(account=self.account)
+        return folder_cls.get_distinguished(root=self)
     except ErrorAccessDenied:
         # Maybe we just don&#39;t have GetFolder access? Try FindItem instead
         log.debug(&#34;Testing default %s folder with FindItem&#34;, folder_cls)
         fld = folder_cls(
-            root=self,
             _distinguished_id=DistinguishedFolderId(
                 id=folder_cls.DISTINGUISHED_FOLDER_ID,
                 mailbox=Mailbox(email_address=self.account.primary_smtp_address),
             ),
+            root=self,
         )
         fld.test_access()
         return self._folders_map.get(fld.id, fld)  # Use cached instance if available

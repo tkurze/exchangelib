@@ -3,7 +3,7 @@
 # * Bump version in exchangelib/__init__.py
 # * Bump version in CHANGELOG.md
 # * Generate documentation:
-#     rm -r docs/exchangelib && pdoc3 --html exchangelib -o docs --force && pre-commit run end-of-file-fixer
+#     rm -r docs/exchangelib && pdoc3 --html exchangelib -o docs --force && git add docs && pre-commit run end-of-file-fixer
 # * Commit and push changes
 # * Build package:
 #     rm -rf build dist exchangelib.egg-info && python -m build

@@ -797,7 +797,7 @@ input list.</p>
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     def get_payload(self, folders, parent_folder):
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
@@ -2234,6 +2234,7 @@ invitation accepts (see
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
         msg_text = get_xml_attr(message, f&#34;{{{MNS}}}MessageText&#34;)
         msg_xml = message.find(f&#34;{{{MNS}}}MessageXml&#34;)
+        rule_errors = message.find(f&#34;{{{MNS}}}RuleOperationErrors&#34;)
         if response_class == &#34;Warning&#34;:
             try:
                 raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
@@ -2247,12 +2248,12 @@ invitation accepts (see
                 return container
         # response_class == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
         try:
-            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
+            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml, rule_errors=rule_errors)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e
 
     @staticmethod
-    def _get_exception(code, text, msg_xml):
+    def _get_exception(code, text, msg_xml=None, rule_errors=None):
         &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package.&#34;&#34;&#34;
         if not code:
             return TransportError(f&#34;Empty ResponseCode in ResponseMessage (MessageText: {text}, MessageXml: {msg_xml})&#34;)
@@ -2290,6 +2291,13 @@ invitation accepts (see
                 except KeyError:
                     # Inner code is unknown to us. Just append to the original text
                     text += f&#34; (inner error: {inner_code}({inner_text!r}))&#34;
+        if rule_errors is not None:
+            for rule_error in rule_errors.findall(f&#34;{{{TNS}}}RuleOperationError&#34;):
+                for error in rule_error.find(f&#34;{{{TNS}}}ValidationErrors&#34;).findall(f&#34;{{{TNS}}}Error&#34;):
+                    field_uri = get_xml_attr(error, f&#34;{{{TNS}}}FieldURI&#34;)
+                    error_code = get_xml_attr(error, f&#34;{{{TNS}}}ErrorCode&#34;)
+                    error_message = get_xml_attr(error, f&#34;{{{TNS}}}ErrorMessage&#34;)
+                    text += f&#34; ({error_code} on field {field_uri}: {error_message})&#34;
         try:
             # Raise the error corresponding to the ResponseCode
             return vars(errors)[code](text)
@@ -4103,7 +4111,7 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     def get_payload(self, folders, additional_fields, shape):
         payload = create_element(f&#34;m:{self.SERVICE_NAME}&#34;)
@@ -5750,7 +5758,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             return container
         # Raise any non-acceptable errors in the container, or return the acceptable exception instance
         try:
-            raise self._get_exception(code=res.error_code, text=res.error_message, msg_xml=None)
+            raise self._get_exception(code=res.error_code, text=res.error_message)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e</code></pre>
 </details>
@@ -7079,7 +7087,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             # We can&#39;t find() the element because we don&#39;t know which tag to look for. The change element can
             # contain multiple folder types, each with their own tag.
             folder_elem = elem[0]
-            folder = parse_folder_elem(elem=folder_elem, folder=self.folder, account=self.account)
+            folder = parse_folder_elem(elem=folder_elem, folder=self.folder)
         return change_type, folder
 
     def get_payload(self, folder, shape, additional_fields, sync_state):
@@ -7487,7 +7495,7 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             if isinstance(elem, Exception):
                 yield elem
                 continue
-            yield parse_folder_elem(elem=elem, folder=folder, account=self.account)
+            yield parse_folder_elem(elem=elem, folder=folder)
 
     @staticmethod
     def _target_elem(target):

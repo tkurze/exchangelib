@@ -44,6 +44,7 @@ from ..fields import (
     EWSElementField,
     EWSElementListField,
     IdElementField,
+    ImAddressField,
     MailboxField,
     MailboxListField,
     MemberListField,
@@ -114,7 +115,7 @@ class Contact(Item):
     )
     department = TextField(field_uri=&#34;contacts:Department&#34;)
     generation = TextField(field_uri=&#34;contacts:Generation&#34;)
-    im_addresses = CharField(field_uri=&#34;contacts:ImAddresses&#34;, is_read_only=True)
+    im_addresses = ImAddressField(field_uri=&#34;contacts:ImAddress&#34;)
     job_title = TextField(field_uri=&#34;contacts:JobTitle&#34;)
     manager = TextField(field_uri=&#34;contacts:Manager&#34;)
     mileage = TextField(field_uri=&#34;contacts:Mileage&#34;)
@@ -363,7 +364,7 @@ we use folder.account.</p></div>
     )
     department = TextField(field_uri=&#34;contacts:Department&#34;)
     generation = TextField(field_uri=&#34;contacts:Generation&#34;)
-    im_addresses = CharField(field_uri=&#34;contacts:ImAddresses&#34;, is_read_only=True)
+    im_addresses = ImAddressField(field_uri=&#34;contacts:ImAddress&#34;)
     job_title = TextField(field_uri=&#34;contacts:JobTitle&#34;)
     manager = TextField(field_uri=&#34;contacts:Manager&#34;)
     mileage = TextField(field_uri=&#34;contacts:Mileage&#34;)

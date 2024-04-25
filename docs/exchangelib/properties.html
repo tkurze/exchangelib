@@ -790,6 +790,8 @@ class DistinguishedFolderId(FolderId):
         if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
             # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
             self.mailbox = None
+        elif not self.mailbox:
+            raise ValueError(f&#34;DistinguishedFolderId {self.id} must have a mailbox&#34;)
 
 
 class TimeWindow(EWSElement):
@@ -4903,7 +4905,9 @@ The substitutions are identified by braces ('{' and '}').</p></div>
         super().clean(version=version)
         if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
             # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
-            self.mailbox = None</code></pre>
+            self.mailbox = None
+        elif not self.mailbox:
+            raise ValueError(f&#34;DistinguishedFolderId {self.id} must have a mailbox&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4964,7 +4968,9 @@ def from_xml(cls, elem, account):
     super().clean(version=version)
     if self.id == PublicFoldersRoot.DISTINGUISHED_FOLDER_ID:
         # Avoid &#34;ErrorInvalidOperation: It is not valid to specify a mailbox with the public folder root&#34; from EWS
-        self.mailbox = None</code></pre>
+        self.mailbox = None
+    elif not self.mailbox:
+        raise ValueError(f&#34;DistinguishedFolderId {self.id} must have a mailbox&#34;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -102,11 +102,23 @@ class FolderQuerySet:
         &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
         MultipleObjectsReturned if there are multiple results.
         &#34;&#34;&#34;
+        from .base import Folder
         from .collections import FolderCollection
 
         if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+            roots = {f.root for f in self.folder_collection.folders}
+            if len(roots) != 1:
+                raise ValueError(f&#34;All folders must have the same root hierarchy ({roots})&#34;)
             folders = list(
-                FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+                FolderCollection(
+                    account=self.folder_collection.account,
+                    folders=[
+                        Folder(
+                            _id=FolderId(**kwargs),
+                            root=roots.pop(),
+                        )
+                    ],
+                ).resolve()
             )
         elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
@@ -278,11 +290,23 @@ class SingleFolderQuerySet(FolderQuerySet):
         &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
         MultipleObjectsReturned if there are multiple results.
         &#34;&#34;&#34;
+        from .base import Folder
         from .collections import FolderCollection
 
         if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+            roots = {f.root for f in self.folder_collection.folders}
+            if len(roots) != 1:
+                raise ValueError(f&#34;All folders must have the same root hierarchy ({roots})&#34;)
             folders = list(
-                FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+                FolderCollection(
+                    account=self.folder_collection.account,
+                    folders=[
+                        Folder(
+                            _id=FolderId(**kwargs),
+                            root=roots.pop(),
+                        )
+                    ],
+                ).resolve()
             )
         elif args or kwargs:
             folders = list(self.filter(*args, **kwargs))
@@ -434,11 +458,23 @@ MultipleObjectsReturned if there are multiple results.</p></div>
     &#34;&#34;&#34;Return the query result as exactly one item. Raises DoesNotExist if there are no results, and
     MultipleObjectsReturned if there are multiple results.
     &#34;&#34;&#34;
+    from .base import Folder
     from .collections import FolderCollection
 
     if not args and set(kwargs) in ({&#34;id&#34;}, {&#34;id&#34;, &#34;changekey&#34;}):
+        roots = {f.root for f in self.folder_collection.folders}
+        if len(roots) != 1:
+            raise ValueError(f&#34;All folders must have the same root hierarchy ({roots})&#34;)
         folders = list(
-            FolderCollection(account=self.folder_collection.account, folders=[FolderId(**kwargs)]).resolve()
+            FolderCollection(
+                account=self.folder_collection.account,
+                folders=[
+                    Folder(
+                        _id=FolderId(**kwargs),
+                        root=roots.pop(),
+                    )
+                ],
+            ).resolve()
         )
     elif args or kwargs:
         folders = list(self.filter(*args, **kwargs))

@@ -66,18 +66,9 @@ from ..errors import (
     SOAPError,
     TransportError,
 )
-from ..folders import ArchiveRoot, BaseFolder, Folder, PublicFoldersRoot, Root, RootOfHierarchy
+from ..folders import BaseFolder, Folder, RootOfHierarchy
 from ..items import BaseItem
-from ..properties import (
-    BaseItemId,
-    DistinguishedFolderId,
-    ExceptionFieldURI,
-    ExtendedFieldURI,
-    FieldURI,
-    FolderId,
-    IndexedFieldURI,
-    ItemId,
-)
+from ..properties import BaseItemId, ExceptionFieldURI, ExtendedFieldURI, FieldURI, FolderId, IndexedFieldURI, ItemId
 from ..transport import DEFAULT_ENCODING
 from ..util import (
     ENS,
@@ -618,6 +609,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
         msg_text = get_xml_attr(message, f&#34;{{{MNS}}}MessageText&#34;)
         msg_xml = message.find(f&#34;{{{MNS}}}MessageXml&#34;)
+        rule_errors = message.find(f&#34;{{{MNS}}}RuleOperationErrors&#34;)
         if response_class == &#34;Warning&#34;:
             try:
                 raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
@@ -631,12 +623,12 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 return container
         # response_class == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
         try:
-            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
+            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml, rule_errors=rule_errors)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e
 
     @staticmethod
-    def _get_exception(code, text, msg_xml):
+    def _get_exception(code, text, msg_xml=None, rule_errors=None):
         &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package.&#34;&#34;&#34;
         if not code:
             return TransportError(f&#34;Empty ResponseCode in ResponseMessage (MessageText: {text}, MessageXml: {msg_xml})&#34;)
@@ -674,6 +666,13 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 except KeyError:
                     # Inner code is unknown to us. Just append to the original text
                     text += f&#34; (inner error: {inner_code}({inner_text!r}))&#34;
+        if rule_errors is not None:
+            for rule_error in rule_errors.findall(f&#34;{{{TNS}}}RuleOperationError&#34;):
+                for error in rule_error.find(f&#34;{{{TNS}}}ValidationErrors&#34;).findall(f&#34;{{{TNS}}}Error&#34;):
+                    field_uri = get_xml_attr(error, f&#34;{{{TNS}}}FieldURI&#34;)
+                    error_code = get_xml_attr(error, f&#34;{{{TNS}}}ErrorCode&#34;)
+                    error_message = get_xml_attr(error, f&#34;{{{TNS}}}ErrorMessage&#34;)
+                    text += f&#34; ({error_code} on field {field_uri}: {error_message})&#34;
         try:
             # Raise the error corresponding to the ResponseCode
             return vars(errors)[code](text)
@@ -998,30 +997,12 @@ def attachment_ids_element(items, version, tag=&#34;m:AttachmentIds&#34;):
     return _ids_element(items, AttachmentId, version, tag)
 
 
-def parse_folder_elem(elem, folder, account):
+def parse_folder_elem(elem, folder):
     if isinstance(folder, RootOfHierarchy):
-        f = folder.from_xml(elem=elem, account=folder.account)
-    elif isinstance(folder, Folder):
-        f = folder.from_xml_with_root(elem=elem, root=folder.root)
-    elif isinstance(folder, DistinguishedFolderId):
-        # We don&#39;t know the root or even account, but we need to attach the folder to something if we want to make
-        # future requests with this folder. Use &#39;account&#39; but make sure to always use the distinguished folder ID going
-        # forward, instead of referencing anything connected to &#39;account&#39;.
-        roots = (Root, ArchiveRoot, PublicFoldersRoot)
-        for cls in roots + tuple(chain(*(r.WELLKNOWN_FOLDERS for r in roots))):
-            if cls.DISTINGUISHED_FOLDER_ID == folder.id:
-                folder_cls = cls
-                break
-        else:
-            raise ValueError(f&#34;Unknown distinguished folder ID: {folder.id}&#34;)
-        if folder_cls in roots:
-            f = folder_cls.from_xml(elem=elem, account=account)
-        else:
-            f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
-    else:
-        # &#39;folder&#39; is a generic FolderId instance. We don&#39;t know the root so assume account.root.
-        f = Folder.from_xml_with_root(elem=elem, root=account.root)
-    return f</code></pre>
+        return folder.from_xml(elem=elem, account=folder.account)
+    if isinstance(folder, Folder):
+        return folder.from_xml_with_root(elem=elem, root=folder.root)
+    raise ValueError(f&#34;Unsupported folder class: {folder}&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -1071,7 +1052,7 @@ def parse_folder_elem(elem, folder, account):
 </details>
 </dd>
 <dt id="exchangelib.services.common.parse_folder_elem"><code class="name flex">
-<span>def <span class="ident">parse_folder_elem</span></span>(<span>elem, folder, account)</span>
+<span>def <span class="ident">parse_folder_elem</span></span>(<span>elem, folder)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1079,30 +1060,12 @@ def parse_folder_elem(elem, folder, account):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parse_folder_elem(elem, folder, account):
+<pre><code class="python">def parse_folder_elem(elem, folder):
     if isinstance(folder, RootOfHierarchy):
-        f = folder.from_xml(elem=elem, account=folder.account)
-    elif isinstance(folder, Folder):
-        f = folder.from_xml_with_root(elem=elem, root=folder.root)
-    elif isinstance(folder, DistinguishedFolderId):
-        # We don&#39;t know the root or even account, but we need to attach the folder to something if we want to make
-        # future requests with this folder. Use &#39;account&#39; but make sure to always use the distinguished folder ID going
-        # forward, instead of referencing anything connected to &#39;account&#39;.
-        roots = (Root, ArchiveRoot, PublicFoldersRoot)
-        for cls in roots + tuple(chain(*(r.WELLKNOWN_FOLDERS for r in roots))):
-            if cls.DISTINGUISHED_FOLDER_ID == folder.id:
-                folder_cls = cls
-                break
-        else:
-            raise ValueError(f&#34;Unknown distinguished folder ID: {folder.id}&#34;)
-        if folder_cls in roots:
-            f = folder_cls.from_xml(elem=elem, account=account)
-        else:
-            f = folder_cls.from_xml_with_root(elem=elem, root=account.root)
-    else:
-        # &#39;folder&#39; is a generic FolderId instance. We don&#39;t know the root so assume account.root.
-        f = Folder.from_xml_with_root(elem=elem, root=account.root)
-    return f</code></pre>
+        return folder.from_xml(elem=elem, account=folder.account)
+    if isinstance(folder, Folder):
+        return folder.from_xml_with_root(elem=elem, root=folder.root)
+    raise ValueError(f&#34;Unsupported folder class: {folder}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.common.shape_element"><code class="name flex">
@@ -2017,6 +1980,7 @@ def parse_folder_elem(elem, folder, account):
         # Raise any non-acceptable errors in the container, or return the container or the acceptable exception instance
         msg_text = get_xml_attr(message, f&#34;{{{MNS}}}MessageText&#34;)
         msg_xml = message.find(f&#34;{{{MNS}}}MessageXml&#34;)
+        rule_errors = message.find(f&#34;{{{MNS}}}RuleOperationErrors&#34;)
         if response_class == &#34;Warning&#34;:
             try:
                 raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
@@ -2030,12 +1994,12 @@ def parse_folder_elem(elem, folder, account):
                 return container
         # response_class == &#39;Error&#39;, or &#39;Success&#39; and not &#39;NoError&#39;
         try:
-            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml)
+            raise self._get_exception(code=response_code, text=msg_text, msg_xml=msg_xml, rule_errors=rule_errors)
         except self.ERRORS_TO_CATCH_IN_RESPONSE as e:
             return e
 
     @staticmethod
-    def _get_exception(code, text, msg_xml):
+    def _get_exception(code, text, msg_xml=None, rule_errors=None):
         &#34;&#34;&#34;Parse error messages contained in EWS responses and raise as exceptions defined in this package.&#34;&#34;&#34;
         if not code:
             return TransportError(f&#34;Empty ResponseCode in ResponseMessage (MessageText: {text}, MessageXml: {msg_xml})&#34;)
@@ -2073,6 +2037,13 @@ def parse_folder_elem(elem, folder, account):
                 except KeyError:
                     # Inner code is unknown to us. Just append to the original text
                     text += f&#34; (inner error: {inner_code}({inner_text!r}))&#34;
+        if rule_errors is not None:
+            for rule_error in rule_errors.findall(f&#34;{{{TNS}}}RuleOperationError&#34;):
+                for error in rule_error.find(f&#34;{{{TNS}}}ValidationErrors&#34;).findall(f&#34;{{{TNS}}}Error&#34;):
+                    field_uri = get_xml_attr(error, f&#34;{{{TNS}}}FieldURI&#34;)
+                    error_code = get_xml_attr(error, f&#34;{{{TNS}}}ErrorCode&#34;)
+                    error_message = get_xml_attr(error, f&#34;{{{TNS}}}ErrorMessage&#34;)
+                    text += f&#34; ({error_code} on field {field_uri}: {error_message})&#34;
         try:
             # Raise the error corresponding to the ResponseCode
             return vars(errors)[code](text)

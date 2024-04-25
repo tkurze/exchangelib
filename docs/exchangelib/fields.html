@@ -1358,6 +1358,9 @@ class NamedSubField(SubField):
 class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;A base class for all indexed fields.&#34;&#34;&#34;
 
+    is_list = True
+    is_complex = True
+
     PARENT_ELEMENT_NAME = None
 
     def __init__(self, *args, **kwargs):
@@ -1378,16 +1381,15 @@ class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
         return hash(self.field_uri)
 
 
-class EmailAddressesField(IndexedField):
-    is_list = True
-    is_complex = True
-
-    PARENT_ELEMENT_NAME = &#34;EmailAddresses&#34;
+class SingleFieldIndexedField(IndexedField):
+    &#34;&#34;&#34;A base class for all single-field indexed fields.&#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
-        from .indexed_properties import EmailAddress
+        from .indexed_properties import SingleFieldIndexedElement
 
-        kwargs[&#34;value_cls&#34;] = EmailAddress
+        value_cls = kwargs[&#34;value_cls&#34;]
+        if not issubclass(value_cls, SingleFieldIndexedElement):
+            raise TypeError(f&#34;&#39;value_cls&#39; {value_cls!r} must be a subclass of type {SingleFieldIndexedElement}&#34;)
         super().__init__(*args, **kwargs)
 
     def clean(self, value, version=None):
@@ -1396,19 +1398,37 @@ class EmailAddressesField(IndexedField):
             if len(value) &gt; len(default_labels):
                 raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
             tmp = []
+            value_field_name = self.value_cls.value_field(version=version).name
             for s, default_label in zip(value, default_labels):
                 if not isinstance(s, str):
                     tmp.append(s)
                     continue
-                tmp.append(self.value_cls(email=s, label=default_label))
+                tmp.append(self.value_cls(**{&#34;label&#34;: default_label, value_field_name: s}))
             value = tmp
         return super().clean(value, version=version)
 
 
-class PhoneNumberField(IndexedField):
-    is_list = True
-    is_complex = True
+class EmailAddressesField(SingleFieldIndexedField):
+    PARENT_ELEMENT_NAME = &#34;EmailAddresses&#34;
 
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import EmailAddress
+
+        kwargs[&#34;value_cls&#34;] = EmailAddress
+        super().__init__(*args, **kwargs)
+
+
+class ImAddressField(SingleFieldIndexedField):
+    PARENT_ELEMENT_NAME = &#34;ImAddresses&#34;
+
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import ImAddress
+
+        kwargs[&#34;value_cls&#34;] = ImAddress
+        super().__init__(*args, **kwargs)
+
+
+class PhoneNumberField(SingleFieldIndexedField):
     PARENT_ELEMENT_NAME = &#34;PhoneNumbers&#34;
 
     def __init__(self, *args, **kwargs):
@@ -3599,39 +3619,23 @@ def value_cls(self):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for all indexed fields.</p></div>
+<div class="desc"><p>A base class for all single-field indexed fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class EmailAddressesField(IndexedField):
-    is_list = True
-    is_complex = True
-
+<pre><code class="python">class EmailAddressesField(SingleFieldIndexedField):
     PARENT_ELEMENT_NAME = &#34;EmailAddresses&#34;
 
     def __init__(self, *args, **kwargs):
         from .indexed_properties import EmailAddress
 
         kwargs[&#34;value_cls&#34;] = EmailAddress
-        super().__init__(*args, **kwargs)
-
-    def clean(self, value, version=None):
-        if value is not None:
-            default_labels = self.value_cls.LABEL_CHOICES
-            if len(value) &gt; len(default_labels):
-                raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
-            tmp = []
-            for s, default_label in zip(value, default_labels):
-                if not isinstance(s, str):
-                    tmp.append(s)
-                    continue
-                tmp.append(self.value_cls(email=s, label=default_label))
-            value = tmp
-        return super().clean(value, version=version)</code></pre>
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></li>
 <li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
@@ -3644,48 +3648,13 @@ def value_cls(self):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.fields.EmailAddressesField.is_complex"><code class="name">var <span class="ident">is_complex</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.fields.EmailAddressesField.is_list"><code class="name">var <span class="ident">is_list</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="exchangelib.fields.EmailAddressesField.clean"><code class="name flex">
-<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean(self, value, version=None):
-    if value is not None:
-        default_labels = self.value_cls.LABEL_CHOICES
-        if len(value) &gt; len(default_labels):
-            raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
-        tmp = []
-        for s, default_label in zip(value, default_labels):
-            if not isinstance(s, str):
-                tmp.append(s)
-                continue
-            tmp.append(self.value_cls(email=s, label=default_label))
-        value = tmp
-    return super().clean(value, version=version)</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></b></code>:
+<li><code><b><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.fields.IndexedField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
-<li><code><a title="exchangelib.fields.IndexedField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 </ul>
 </li>
 </ul>
@@ -5099,6 +5068,51 @@ but we can assume 512 bytes in practice. See
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.fields.ImAddressField"><code class="flex name class">
+<span>class <span class="ident">ImAddressField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A base class for all single-field indexed fields.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ImAddressField(SingleFieldIndexedField):
+    PARENT_ELEMENT_NAME = &#34;ImAddresses&#34;
+
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import ImAddress
+
+        kwargs[&#34;value_cls&#34;] = ImAddress
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></li>
+<li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.fields.ImAddressField.PARENT_ELEMENT_NAME"><code class="name">var <span class="ident">PARENT_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.fields.ImportanceField"><code class="flex name class">
 <span>class <span class="ident">ImportanceField</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -5155,6 +5169,9 @@ in the current folder.</p></div>
 <pre><code class="python">class IndexedField(EWSElementField, metaclass=abc.ABCMeta):
     &#34;&#34;&#34;A base class for all indexed fields.&#34;&#34;&#34;
 
+    is_list = True
+    is_complex = True
+
     PARENT_ELEMENT_NAME = None
 
     def __init__(self, *args, **kwargs):
@@ -5183,13 +5200,20 @@ in the current folder.</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="exchangelib.fields.EmailAddressesField" href="#exchangelib.fields.EmailAddressesField">EmailAddressesField</a></li>
-<li><a title="exchangelib.fields.PhoneNumberField" href="#exchangelib.fields.PhoneNumberField">PhoneNumberField</a></li>
 <li><a title="exchangelib.fields.PhysicalAddressField" href="#exchangelib.fields.PhysicalAddressField">PhysicalAddressField</a></li>
+<li><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.fields.IndexedField.PARENT_ELEMENT_NAME"><code class="name">var <span class="ident">PARENT_ELEMENT_NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.IndexedField.is_complex"><code class="name">var <span class="ident">is_complex</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.fields.IndexedField.is_list"><code class="name">var <span class="ident">is_list</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -6083,15 +6107,12 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for all indexed fields.</p></div>
+<div class="desc"><p>A base class for all single-field indexed fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PhoneNumberField(IndexedField):
-    is_list = True
-    is_complex = True
-
+<pre><code class="python">class PhoneNumberField(SingleFieldIndexedField):
     PARENT_ELEMENT_NAME = &#34;PhoneNumbers&#34;
 
     def __init__(self, *args, **kwargs):
@@ -6102,6 +6123,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></li>
 <li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
 <li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
 <li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
@@ -6114,21 +6136,13 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.fields.PhoneNumberField.is_complex"><code class="name">var <span class="ident">is_complex</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="exchangelib.fields.PhoneNumberField.is_list"><code class="name">var <span class="ident">is_list</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></b></code>:
+<li><code><b><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></b></code>:
 <ul class="hlist">
-<li><code><a title="exchangelib.fields.IndexedField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
-<li><code><a title="exchangelib.fields.IndexedField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 </ul>
 </li>
 </ul>
@@ -6419,6 +6433,94 @@ because the decoded data could be in some other encoding, specified in the "Cont
 <li><code><a title="exchangelib.fields.ChoiceField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
 <li><code><a title="exchangelib.fields.ChoiceField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 <li><code><a title="exchangelib.fields.ChoiceField.value_cls" href="#exchangelib.fields.TextField.value_cls">value_cls</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="exchangelib.fields.SingleFieldIndexedField"><code class="flex name class">
+<span>class <span class="ident">SingleFieldIndexedField</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A base class for all single-field indexed fields.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SingleFieldIndexedField(IndexedField):
+    &#34;&#34;&#34;A base class for all single-field indexed fields.&#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        from .indexed_properties import SingleFieldIndexedElement
+
+        value_cls = kwargs[&#34;value_cls&#34;]
+        if not issubclass(value_cls, SingleFieldIndexedElement):
+            raise TypeError(f&#34;&#39;value_cls&#39; {value_cls!r} must be a subclass of type {SingleFieldIndexedElement}&#34;)
+        super().__init__(*args, **kwargs)
+
+    def clean(self, value, version=None):
+        if value is not None:
+            default_labels = self.value_cls.LABEL_CHOICES
+            if len(value) &gt; len(default_labels):
+                raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
+            tmp = []
+            value_field_name = self.value_cls.value_field(version=version).name
+            for s, default_label in zip(value, default_labels):
+                if not isinstance(s, str):
+                    tmp.append(s)
+                    continue
+                tmp.append(self.value_cls(**{&#34;label&#34;: default_label, value_field_name: s}))
+            value = tmp
+        return super().clean(value, version=version)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></li>
+<li><a title="exchangelib.fields.EWSElementField" href="#exchangelib.fields.EWSElementField">EWSElementField</a></li>
+<li><a title="exchangelib.fields.FieldURIField" href="#exchangelib.fields.FieldURIField">FieldURIField</a></li>
+<li><a title="exchangelib.fields.Field" href="#exchangelib.fields.Field">Field</a></li>
+<li><a title="exchangelib.version.SupportedVersionInstanceMixIn" href="version.html#exchangelib.version.SupportedVersionInstanceMixIn">SupportedVersionInstanceMixIn</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.fields.EmailAddressesField" href="#exchangelib.fields.EmailAddressesField">EmailAddressesField</a></li>
+<li><a title="exchangelib.fields.ImAddressField" href="#exchangelib.fields.ImAddressField">ImAddressField</a></li>
+<li><a title="exchangelib.fields.PhoneNumberField" href="#exchangelib.fields.PhoneNumberField">PhoneNumberField</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="exchangelib.fields.SingleFieldIndexedField.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self, value, version=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self, value, version=None):
+    if value is not None:
+        default_labels = self.value_cls.LABEL_CHOICES
+        if len(value) &gt; len(default_labels):
+            raise ValueError(f&#34;This field can handle at most {len(default_labels)} values (value: {value})&#34;)
+        tmp = []
+        value_field_name = self.value_cls.value_field(version=version).name
+        for s, default_label in zip(value, default_labels):
+            if not isinstance(s, str):
+                tmp.append(s)
+                continue
+            tmp.append(self.value_cls(**{&#34;label&#34;: default_label, value_field_name: s}))
+        value = tmp
+    return super().clean(value, version=version)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.fields.IndexedField.from_xml" href="#exchangelib.fields.Field.from_xml">from_xml</a></code></li>
+<li><code><a title="exchangelib.fields.IndexedField.to_xml" href="#exchangelib.fields.Field.to_xml">to_xml</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7528,9 +7630,6 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.EmailAddressesField" href="#exchangelib.fields.EmailAddressesField">EmailAddressesField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.EmailAddressesField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.EmailAddressesField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
-<li><code><a title="exchangelib.fields.EmailAddressesField.clean" href="#exchangelib.fields.EmailAddressesField.clean">clean</a></code></li>
-<li><code><a title="exchangelib.fields.EmailAddressesField.is_complex" href="#exchangelib.fields.EmailAddressesField.is_complex">is_complex</a></code></li>
-<li><code><a title="exchangelib.fields.EmailAddressesField.is_list" href="#exchangelib.fields.EmailAddressesField.is_list">is_list</a></code></li>
 </ul>
 </li>
 <li>
@@ -7631,12 +7730,20 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.IdField" href="#exchangelib.fields.IdField">IdField</a></code></h4>
 </li>
 <li>
+<h4><code><a title="exchangelib.fields.ImAddressField" href="#exchangelib.fields.ImAddressField">ImAddressField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.ImAddressField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.ImAddressField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.fields.ImportanceField" href="#exchangelib.fields.ImportanceField">ImportanceField</a></code></h4>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.IndexedField" href="#exchangelib.fields.IndexedField">IndexedField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.IndexedField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.IndexedField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
+<li><code><a title="exchangelib.fields.IndexedField.is_complex" href="#exchangelib.fields.IndexedField.is_complex">is_complex</a></code></li>
+<li><code><a title="exchangelib.fields.IndexedField.is_list" href="#exchangelib.fields.IndexedField.is_list">is_list</a></code></li>
 <li><code><a title="exchangelib.fields.IndexedField.response_tag" href="#exchangelib.fields.IndexedField.response_tag">response_tag</a></code></li>
 </ul>
 </li>
@@ -7731,8 +7838,6 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 <h4><code><a title="exchangelib.fields.PhoneNumberField" href="#exchangelib.fields.PhoneNumberField">PhoneNumberField</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.fields.PhoneNumberField.PARENT_ELEMENT_NAME" href="#exchangelib.fields.PhoneNumberField.PARENT_ELEMENT_NAME">PARENT_ELEMENT_NAME</a></code></li>
-<li><code><a title="exchangelib.fields.PhoneNumberField.is_complex" href="#exchangelib.fields.PhoneNumberField.is_complex">is_complex</a></code></li>
-<li><code><a title="exchangelib.fields.PhoneNumberField.is_list" href="#exchangelib.fields.PhoneNumberField.is_list">is_list</a></code></li>
 </ul>
 </li>
 <li>
@@ -7766,6 +7871,12 @@ If we want a URI validator, see <a href="https://stackoverflow.com/questions/144
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.SensitivityField" href="#exchangelib.fields.SensitivityField">SensitivityField</a></code></h4>
+</li>
+<li>
+<h4><code><a title="exchangelib.fields.SingleFieldIndexedField" href="#exchangelib.fields.SingleFieldIndexedField">SingleFieldIndexedField</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.fields.SingleFieldIndexedField.clean" href="#exchangelib.fields.SingleFieldIndexedField.clean">clean</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="exchangelib.fields.StringAttributedValueField" href="#exchangelib.fields.StringAttributedValueField">StringAttributedValueField</a></code></h4>
