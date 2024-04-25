@@ -5,6 +5,13 @@ HEAD
 ----
 
 
+5.3.0
+-----
+- Fix various issues related to public folders and archive folders
+- Support read-write for ``Contact.im_addresses`
+- Improve reporting of inbox rule validation errors
+
+
 5.2.1
 -----
 - Fix `ErrorAccessDenied: Not allowed to access Non IPM folder` caused by recent changes in O365.
