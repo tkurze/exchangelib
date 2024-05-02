@@ -2302,8 +2302,13 @@ class Rule(EWSElement):
 
     def delete(self):
         if self.is_enabled is False:
-            # Cannot delete a disabled rule - server throws 'ErrorItemNotFound'
+            # Cannot delete a disabled rule - the server throws 'ErrorItemNotFound'. We need to enable it first.
             self.is_enabled = True
+            # Make sure we can save the rule by wiping all possibly-misconfigured fields
+            self.priority = 10**6
+            self.conditions = None
+            self.exceptions = None
+            self.actions = Actions(stop_processing_rules=True)
             self.save()
         self.account.delete_rule(self)
 

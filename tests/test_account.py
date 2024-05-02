@@ -372,6 +372,19 @@ class AccountTest(EWSTest):
         rule.delete()
         self.assertNotIn(rule.display_name, {r.display_name for r in self.account.rules})
 
+    def test_disabled_inbox_rule(self):
+        # Make sure we can delete a disabled rule
+        rule = Rule(
+            account=self.account,
+            display_name=get_random_string(16),
+            priority=10**6,
+            is_enabled=False,
+            actions=Actions(stop_processing_rules=True),
+        )
+        rule.save()
+        rule.actions = Actions(forward_to_recipients=[[Address()]])  # Test with an invalid action
+        rule.delete()
+
     def test_all_inbox_rule_actions(self):
         for action_name, action in {
             "assign_categories": ["foo", "bar"],
