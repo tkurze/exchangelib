@@ -11,7 +11,7 @@ from ..items import (
     Task,
 )
 from ..properties import EWSMeta
-from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1
+from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1, EXCHANGE_O365
 from .base import Folder
 from .collections import FolderCollection
 
@@ -228,6 +228,7 @@ class AllItems(WellknownFolder):
 class AllCategorizedItems(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "allcategorizeditems"
     CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
 
 
 class AllPersonMetadata(WellknownFolder):
@@ -297,11 +298,12 @@ class Directory(WellknownFolder):
 class DlpPolicyEvaluation(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "dlppolicyevaluation"
     CONTAINER_CLASS = "IPF.StoreItem.DlpPolicyEvaluation"
+    supported_from = EXCHANGE_O365
 
 
 class Favorites(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Note"
     DISTINGUISHED_FOLDER_ID = "favorites"
+    CONTAINER_CLASS = "IPF.Note"
     supported_from = EXCHANGE_2013
 
 
@@ -313,16 +315,16 @@ class FolderMemberships(Folder):
 
 
 class FromFavoriteSenders(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Note"
     DISTINGUISHED_FOLDER_ID = "fromfavoritesenders"
+    CONTAINER_CLASS = "IPF.Note"
     LOCALIZED_NAMES = {
         "da_DK": ("Personer jeg kender",),
     }
 
 
 class IMContactList(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Contact.MOC.ImContactList"
     DISTINGUISHED_FOLDER_ID = "imcontactlist"
+    CONTAINER_CLASS = "IPF.Contact.MOC.ImContactList"
     supported_from = EXCHANGE_2013
 
 
@@ -367,6 +369,7 @@ class Notes(WellknownFolder):
 
 class OneNotePagePreviews(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "onenotepagepreviews"
+    supported_from = EXCHANGE_O365
 
 
 class PeopleCentricConversationBuddies(WellknownFolder):
@@ -384,31 +387,37 @@ class PeopleConnect(WellknownFolder):
 
 class QedcDefaultRetention(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "qedcdefaultretention"
+    supported_from = EXCHANGE_O365
 
 
 class QedcLongRetention(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "qedclongretention"
+    supported_from = EXCHANGE_O365
 
 
 class QedcMediumRetention(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "qedcmediumretention"
+    supported_from = EXCHANGE_O365
 
 
 class QedcShortRetention(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "qedcshortretention"
+    supported_from = EXCHANGE_O365
 
 
 class QuarantinedEmail(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "quarantinedemail"
+    supported_from = EXCHANGE_O365
 
 
 class QuarantinedEmailDefaultCategory(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "quarantinedemaildefaultcategory"
+    supported_from = EXCHANGE_O365
 
 
 class QuickContacts(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Contact.MOC.QuickContacts"
     DISTINGUISHED_FOLDER_ID = "quickcontacts"
+    CONTAINER_CLASS = "IPF.Contact.MOC.QuickContacts"
     supported_from = EXCHANGE_2013
 
 
@@ -446,7 +455,7 @@ class RecoverableItemsRoot(WellknownFolder):
 
 class RecoverableItemsSubstrateHolds(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "recoverableitemssubstrateholds"
-    supported_from = EXCHANGE_2010_SP1
+    supported_from = EXCHANGE_O365
     LOCALIZED_NAMES = {
         None: ("SubstrateHolds",),
     }
@@ -472,6 +481,7 @@ class SharePointNotifications(WellknownFolder):
 
 class ShortNotes(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "shortnotes"
+    supported_from = EXCHANGE_O365
 
 
 class SyncIssues(WellknownFolder):
@@ -485,8 +495,8 @@ class TemporarySaves(WellknownFolder):
 
 
 class ToDoSearch(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Task"
     DISTINGUISHED_FOLDER_ID = "todosearch"
+    CONTAINER_CLASS = "IPF.Task"
     supported_from = EXCHANGE_2013
     LOCALIZED_NAMES = {
         None: ("To-Do Search",),
@@ -494,8 +504,9 @@ class ToDoSearch(WellknownFolder):
 
 
 class UserCuratedContacts(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Note"
     DISTINGUISHED_FOLDER_ID = "usercuratedcontacts"
+    CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
 
 
 class VoiceMail(WellknownFolder):
