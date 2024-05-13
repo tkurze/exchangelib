@@ -271,11 +271,6 @@ class ArchiveRecoverableItemsVersions(WellknownFolder):
     supported_from = EXCHANGE_2010_SP1
 
 
-class CalendarSearchCache(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = "calendarsearchcache"
-    CONTAINER_CLASS = "IPF.Appointment"
-
-
 class Companies(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "companycontacts"
     CONTAINER_CLASS = "IPF.Contact.Company"
@@ -388,11 +383,6 @@ class PeopleCentricConversationBuddies(WellknownFolder):
 class PeopleConnect(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "peopleconnect"
     supported_from = EXCHANGE_2013
-
-
-class PersonMetadata(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = "personmetadata"
-    CONTAINER_CLASS = "IPF.Contact"
 
 
 class QedcDefaultRetention(WellknownFolder):
@@ -557,6 +547,10 @@ class CalendarLogging(NonDeletableFolder):
     }
 
 
+class CalendarSearchCache(NonDeletableFolder):
+    CONTAINER_CLASS = "IPF.Appointment"
+
+
 class CommonViews(NonDeletableFolder):
     DEFAULT_ITEM_TRAVERSAL_DEPTH = ASSOCIATED
     LOCALIZED_NAMES = {
@@ -658,6 +652,10 @@ class PassThroughSearchResults(NonDeletableFolder):
     }
 
 
+class PersonMetadata(NonDeletableFolder):
+    CONTAINER_CLASS = "IPF.Contact"
+
+
 class PdpProfileV2Secured(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.StoreItem.PdpProfileSecured"
 
@@ -727,6 +725,7 @@ NON_DELETABLE_FOLDERS = [
     AllTodoTasks,
     Audits,
     CalendarLogging,
+    CalendarSearchCache,
     CommonViews,
     ConversationSettings,
     DefaultFoldersChangeHistory,
@@ -744,6 +743,7 @@ NON_DELETABLE_FOLDERS = [
     OrganizationalContacts,
     ParkedMessages,
     PassThroughSearchResults,
+    PersonMetadata,
     PdpProfileV2Secured,
     Reminders,
     RSSFeeds,
@@ -767,7 +767,6 @@ WELLKNOWN_FOLDERS_IN_ROOT = [
     AllItems,
     AllPersonMetadata,
     Calendar,
-    CalendarSearchCache,
     Companies,
     Conflicts,
     Contacts,
@@ -791,7 +790,6 @@ WELLKNOWN_FOLDERS_IN_ROOT = [
     Outbox,
     PeopleCentricConversationBuddies,
     PeopleConnect,
-    PersonMetadata,
     QedcDefaultRetention,
     QedcLongRetention,
     QedcMediumRetention,
