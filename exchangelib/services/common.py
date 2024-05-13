@@ -979,4 +979,8 @@ def parse_folder_elem(elem, folder):
     # Not all servers support fetching the DistinguishedFolderId field. Add it back here.
     if folder._distinguished_id and not res._distinguished_id:
         res._distinguished_id = folder._distinguished_id
+    # Some servers return folders in a FindFolder result that have a DistinguishedFolderId element that the same server
+    # cannot handle in a GetFolder request. Only set the DistinguishedFolderId field if we recognize the ID.
+    elif res._distinguished_id and not folder.DISTINGUISHED_FOLDER_ID:
+        res._distinguished_id = None
     return res
