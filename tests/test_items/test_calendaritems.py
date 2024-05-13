@@ -494,6 +494,7 @@ class CalendarTest(CommonItemTest):
         master_from_occurrence = third_occurrence.recurring_master()
 
         master_from_occurrence.refresh()  # Test that GetItem works
+        self.assertEqual(master_from_occurrence.id, master_item.id)
         self.assertEqual(master_from_occurrence.recurrence, recurrence)
         self.assertEqual(master_from_occurrence.subject, master_item.subject)
 
