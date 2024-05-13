@@ -946,4 +946,8 @@ class Folder(BaseFolder):
                     )
             if folder_cls == Folder:
                 log.debug("Fallback to class Folder (folder_class %s, name %s)", folder.folder_class, folder.name)
+        # Some servers return folders in a FindFolder result that have a DistinguishedFolderId element that the same
+        # server cannot handle in a GetFolder request. Only set the DistinguishedFolderId field if we recognize the ID.
+        if folder._distinguished_id and not folder_cls.DISTINGUISHED_FOLDER_ID:
+            folder._distinguished_id = None
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})
