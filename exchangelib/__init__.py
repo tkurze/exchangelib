@@ -39,7 +39,6 @@ from .version import Build, Version
 __version__ = "5.3.0"
 
 __all__ = [
-    "__version__",
     "AcceptItem",
     "Account",
     "Attendee",
@@ -101,6 +100,7 @@ __all__ = [
     "UTC",
     "UTC_NOW",
     "Version",
+    "__version__",
     "close_connections",
     "discover",
 ]

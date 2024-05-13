@@ -17,8 +17,8 @@ __all__ = [
     "AutodiscoverCache",
     "AutodiscoverProtocol",
     "Autodiscovery",
-    "discover",
     "autodiscover_cache",
-    "close_connections",
     "clear_cache",
+    "close_connections",
+    "discover",
 ]
