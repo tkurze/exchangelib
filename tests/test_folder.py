@@ -32,6 +32,7 @@ from exchangelib.folders import (
     BaseFolder,
     Birthdays,
     Calendar,
+    CalendarSearchCache,
     CommonViews,
     Companies,
     Contacts,
@@ -69,6 +70,7 @@ from exchangelib.folders import (
     PassThroughSearchResults,
     PdpProfileV2Secured,
     PeopleCentricConversationBuddies,
+    PersonMetadata,
     PublicFoldersRoot,
     QuickContacts,
     RecipientCache,
@@ -593,6 +595,10 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.SkypeTeams.Message")
                 elif isinstance(f, SmsAndChatsSync):
                     self.assertEqual(f.folder_class, "IPF.SmsAndChatsSync")
+                elif isinstance(f, PersonMetadata):
+                    self.assertEqual(f.folder_class, "IPF.Contact")
+                elif isinstance(f, CalendarSearchCache):
+                    self.assertEqual(f.folder_class, "IPF.Appointment")
                 else:
                     self.assertIn(f.folder_class, (None, "IPF"), (f.name, f.__class__.__name__, f.folder_class))
                     self.assertIsInstance(f, Folder)

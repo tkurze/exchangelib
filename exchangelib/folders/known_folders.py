@@ -525,17 +525,7 @@ class NonDeletableFolder(Folder):
         return False
 
 
-class ExternalContacts(NonDeletableFolder):
-    DISTINGUISHED_FOLDER_ID = None
-    CONTAINER_CLASS = "IPF.Contact"
-    supported_item_models = (Contact, DistributionList)
-    LOCALIZED_NAMES = {
-        None: ("ExternalContacts",),
-    }
-
-
 class AllTodoTasks(NonDeletableFolder):
-    DISTINGUISHED_FOLDER_ID = None
     CONTAINER_CLASS = "IPF.Task"
     supported_item_models = (Task,)
     LOCALIZED_NAMES = {
@@ -555,6 +545,10 @@ class CalendarLogging(NonDeletableFolder):
     LOCALIZED_NAMES = {
         None: ("Calendar Logging",),
     }
+
+
+class CalendarSearchCache(NonDeletableFolder):
+    CONTAINER_CLASS = "IPF.Appointment"
 
 
 class CommonViews(NonDeletableFolder):
@@ -583,6 +577,14 @@ class DeferredAction(NonDeletableFolder):
 
 class ExchangeSyncData(NonDeletableFolder):
     pass
+
+
+class ExternalContacts(NonDeletableFolder):
+    CONTAINER_CLASS = "IPF.Contact"
+    supported_item_models = (Contact, DistributionList)
+    LOCALIZED_NAMES = {
+        None: ("ExternalContacts",),
+    }
 
 
 class Files(NonDeletableFolder):
@@ -648,6 +650,10 @@ class PassThroughSearchResults(NonDeletableFolder):
     LOCALIZED_NAMES = {
         None: ("Pass-Through Search Results",),
     }
+
+
+class PersonMetadata(NonDeletableFolder):
+    CONTAINER_CLASS = "IPF.Contact"
 
 
 class PdpProfileV2Secured(NonDeletableFolder):
@@ -719,6 +725,7 @@ NON_DELETABLE_FOLDERS = [
     AllTodoTasks,
     Audits,
     CalendarLogging,
+    CalendarSearchCache,
     CommonViews,
     ConversationSettings,
     DefaultFoldersChangeHistory,
@@ -736,6 +743,7 @@ NON_DELETABLE_FOLDERS = [
     OrganizationalContacts,
     ParkedMessages,
     PassThroughSearchResults,
+    PersonMetadata,
     PdpProfileV2Secured,
     Reminders,
     RSSFeeds,
