@@ -971,7 +971,12 @@ def attachment_ids_element(items, version, tag="m:AttachmentIds"):
 
 def parse_folder_elem(elem, folder):
     if isinstance(folder, RootOfHierarchy):
-        return folder.from_xml(elem=elem, account=folder.account)
-    if isinstance(folder, Folder):
-        return folder.from_xml_with_root(elem=elem, root=folder.root)
-    raise ValueError(f"Unsupported folder class: {folder}")
+        res = folder.from_xml(elem=elem, account=folder.account)
+    elif isinstance(folder, Folder):
+        res = folder.from_xml_with_root(elem=elem, root=folder.root)
+    else:
+        raise ValueError(f"Unsupported folder class: {folder}")
+    # Not all servers support fetching the DistinguishedFolderId field. Add it back here.
+    if folder._distinguished_id and not res._distinguished_id:
+        res._distinguished_id = folder._distinguished_id
+    return res
