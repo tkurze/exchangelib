@@ -76,6 +76,9 @@ ITEM_CLASSES = (
     PostItem,
     Task,
 )
+TASK_ITEM_CLASSES = (Task,)
+CONTACT_ITEM_CLASSES = (Contact, DistributionList)
+MESSAGE_ITEM_CLASSES = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)
 
 __all__ = [
     "ACTIVE_DIRECTORY",
@@ -91,6 +94,7 @@ __all__ = [
     "BulkCreateResult",
     "CONFERENCE_TYPES",
     "CONFLICT_RESOLUTION_CHOICES",
+    "CONTACT_ITEM_CLASSES",
     "CONTACTS",
     "CONTACTS_ACTIVE_DIRECTORY",
     "CalendarItem",
@@ -107,7 +111,9 @@ __all__ = [
     "ITEM_TRAVERSAL_CHOICES",
     "Item",
     "MESSAGE_DISPOSITION_CHOICES",
+    "MESSAGE_ITEM_CLASSES",
     "MOVE_TO_DELETED_ITEMS",
+    "TASK_ITEM_CLASSES",
     "MeetingCancellation",
     "MeetingRequest",
     "MeetingResponse",

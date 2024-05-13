@@ -1,14 +1,10 @@
 from ..items import (
     ASSOCIATED,
+    CONTACT_ITEM_CLASSES,
     ITEM_CLASSES,
+    MESSAGE_ITEM_CLASSES,
+    TASK_ITEM_CLASSES,
     CalendarItem,
-    Contact,
-    DistributionList,
-    MeetingCancellation,
-    MeetingRequest,
-    MeetingResponse,
-    Message,
-    Task,
 )
 from ..properties import EWSMeta
 from ..version import EXCHANGE_2010_SP1, EXCHANGE_2013, EXCHANGE_2013_SP1, EXCHANGE_O365
@@ -56,163 +52,16 @@ class WellknownFolder(Folder, metaclass=EWSMeta):
     supported_item_models = ITEM_CLASSES
 
 
-class Messages(WellknownFolder):
-    CONTAINER_CLASS = "IPF.Note"
-    supported_item_models = (Message, MeetingRequest, MeetingResponse, MeetingCancellation)
-
-
-class Calendar(WellknownFolder):
-    """An interface for the Exchange calendar."""
-
-    DISTINGUISHED_FOLDER_ID = "calendar"
-    CONTAINER_CLASS = "IPF.Appointment"
-    supported_item_models = (CalendarItem,)
-    LOCALIZED_NAMES = {
-        "da_DK": ("Kalender",),
-        "de_DE": ("Kalender",),
-        "en_US": ("Calendar",),
-        "es_ES": ("Calendario",),
-        "fr_CA": ("Calendrier",),
-        "nl_NL": ("Agenda",),
-        "ru_RU": ("Календарь",),
-        "sv_SE": ("Kalender",),
-        "zh_CN": ("日历",),
-    }
-
-    def view(self, *args, **kwargs):
-        return FolderCollection(account=self.account, folders=[self]).view(*args, **kwargs)
-
-
-class Contacts(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = "contacts"
-    CONTAINER_CLASS = "IPF.Contact"
-    supported_item_models = (Contact, DistributionList)
-    LOCALIZED_NAMES = {
-        "da_DK": ("Kontaktpersoner",),
-        "de_DE": ("Kontakte",),
-        "en_US": ("Contacts",),
-        "es_ES": ("Contactos",),
-        "fr_CA": ("Contacts",),
-        "nl_NL": ("Contactpersonen",),
-        "ru_RU": ("Контакты",),
-        "sv_SE": ("Kontakter",),
-        "zh_CN": ("联系人",),
-    }
-
-
-class DeletedItems(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = "deleteditems"
-    CONTAINER_CLASS = "IPF.Note"
-    supported_item_models = ITEM_CLASSES
-    LOCALIZED_NAMES = {
-        "da_DK": ("Slettet post",),
-        "de_DE": ("Gelöschte Elemente",),
-        "en_US": ("Deleted Items",),
-        "es_ES": ("Elementos eliminados",),
-        "fr_CA": ("Éléments supprimés",),
-        "nl_NL": ("Verwijderde items",),
-        "ru_RU": ("Удаленные",),
-        "sv_SE": ("Borttaget",),
-        "zh_CN": ("已删除邮件",),
-    }
-
-
-class Drafts(Messages):
-    DISTINGUISHED_FOLDER_ID = "drafts"
-    LOCALIZED_NAMES = {
-        "da_DK": ("Kladder",),
-        "de_DE": ("Entwürfe",),
-        "en_US": ("Drafts",),
-        "es_ES": ("Borradores",),
-        "fr_CA": ("Brouillons",),
-        "nl_NL": ("Concepten",),
-        "ru_RU": ("Черновики",),
-        "sv_SE": ("Utkast",),
-        "zh_CN": ("草稿",),
-    }
-
-
-class Inbox(Messages):
-    DISTINGUISHED_FOLDER_ID = "inbox"
-    LOCALIZED_NAMES = {
-        "da_DK": ("Indbakke",),
-        "de_DE": ("Posteingang",),
-        "en_US": ("Inbox",),
-        "es_ES": ("Bandeja de entrada",),
-        "fr_CA": ("Boîte de réception",),
-        "nl_NL": ("Postvak IN",),
-        "ru_RU": ("Входящие",),
-        "sv_SE": ("Inkorgen",),
-        "zh_CN": ("收件箱",),
-    }
-
-
-class JunkEmail(Messages):
-    DISTINGUISHED_FOLDER_ID = "junkemail"
-    LOCALIZED_NAMES = {
-        "da_DK": ("Uønsket e-mail",),
-        "de_DE": ("Junk-E-Mail",),
-        "en_US": ("Junk E-mail",),
-        "es_ES": ("Correo no deseado",),
-        "fr_CA": ("Courrier indésirables",),
-        "nl_NL": ("Ongewenste e-mail",),
-        "ru_RU": ("Нежелательная почта",),
-        "sv_SE": ("Skräppost",),
-        "zh_CN": ("垃圾邮件",),
-    }
-
-
-class Outbox(Messages):
-    DISTINGUISHED_FOLDER_ID = "outbox"
-    LOCALIZED_NAMES = {
-        "da_DK": ("Udbakke",),
-        "de_DE": ("Postausgang",),
-        "en_US": ("Outbox",),
-        "es_ES": ("Bandeja de salida",),
-        "fr_CA": ("Boîte d'envoi",),
-        "nl_NL": ("Postvak UIT",),
-        "ru_RU": ("Исходящие",),
-        "sv_SE": ("Utkorgen",),
-        "zh_CN": ("发件箱",),
-    }
-
-
-class SentItems(Messages):
-    DISTINGUISHED_FOLDER_ID = "sentitems"
-    LOCALIZED_NAMES = {
-        "da_DK": ("Sendt post",),
-        "de_DE": ("Gesendete Elemente",),
-        "en_US": ("Sent Items",),
-        "es_ES": ("Elementos enviados",),
-        "fr_CA": ("Éléments envoyés",),
-        "nl_NL": ("Verzonden items",),
-        "ru_RU": ("Отправленные",),
-        "sv_SE": ("Skickat",),
-        "zh_CN": ("已发送邮件",),
-    }
-
-
-class Tasks(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = "tasks"
-    CONTAINER_CLASS = "IPF.Task"
-    supported_item_models = (Task,)
-    LOCALIZED_NAMES = {
-        "da_DK": ("Opgaver",),
-        "de_DE": ("Aufgaben",),
-        "en_US": ("Tasks",),
-        "es_ES": ("Tareas",),
-        "fr_CA": ("Tâches",),
-        "nl_NL": ("Taken",),
-        "ru_RU": ("Задачи",),
-        "sv_SE": ("Uppgifter",),
-        "zh_CN": ("任务",),
-    }
-
-
 class AdminAuditLogs(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "adminauditlogs"
     supported_from = EXCHANGE_2013
     get_folder_allowed = False
+
+
+class AllCategorizedItems(WellknownFolder):
+    DISTINGUISHED_FOLDER_ID = "allcategorizeditems"
+    CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
 
 
 class AllContacts(WellknownFolder):
@@ -223,12 +72,6 @@ class AllContacts(WellknownFolder):
 class AllItems(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "allitems"
     CONTAINER_CLASS = "IPF"
-
-
-class AllCategorizedItems(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = "allcategorizeditems"
-    CONTAINER_CLASS = "IPF.Note"
-    supported_from = EXCHANGE_O365
 
 
 class AllPersonMetadata(WellknownFolder):
@@ -271,10 +114,32 @@ class ArchiveRecoverableItemsVersions(WellknownFolder):
     supported_from = EXCHANGE_2010_SP1
 
 
+class Calendar(WellknownFolder):
+    """An interface for the Exchange calendar."""
+
+    DISTINGUISHED_FOLDER_ID = "calendar"
+    CONTAINER_CLASS = "IPF.Appointment"
+    supported_item_models = (CalendarItem,)
+    LOCALIZED_NAMES = {
+        "da_DK": ("Kalender",),
+        "de_DE": ("Kalender",),
+        "en_US": ("Calendar",),
+        "es_ES": ("Calendario",),
+        "fr_CA": ("Calendrier",),
+        "nl_NL": ("Agenda",),
+        "ru_RU": ("Календарь",),
+        "sv_SE": ("Kalender",),
+        "zh_CN": ("日历",),
+    }
+
+    def view(self, *args, **kwargs):
+        return FolderCollection(account=self.account, folders=[self]).view(*args, **kwargs)
+
+
 class Companies(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "companycontacts"
     CONTAINER_CLASS = "IPF.Contact.Company"
-    supported_item_models = (Contact, DistributionList)
+    supported_item_models = CONTACT_ITEM_CLASSES
     LOCALIZED_NAMES = {
         "da_DK": ("Firmaer",),
     }
@@ -285,9 +150,43 @@ class Conflicts(WellknownFolder):
     supported_from = EXCHANGE_2013
 
 
+class Contacts(WellknownFolder):
+    DISTINGUISHED_FOLDER_ID = "contacts"
+    CONTAINER_CLASS = "IPF.Contact"
+    supported_item_models = CONTACT_ITEM_CLASSES
+    LOCALIZED_NAMES = {
+        "da_DK": ("Kontaktpersoner",),
+        "de_DE": ("Kontakte",),
+        "en_US": ("Contacts",),
+        "es_ES": ("Contactos",),
+        "fr_CA": ("Contacts",),
+        "nl_NL": ("Contactpersonen",),
+        "ru_RU": ("Контакты",),
+        "sv_SE": ("Kontakter",),
+        "zh_CN": ("联系人",),
+    }
+
+
 class ConversationHistory(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "conversationhistory"
     supported_from = EXCHANGE_2013
+
+
+class DeletedItems(WellknownFolder):
+    DISTINGUISHED_FOLDER_ID = "deleteditems"
+    CONTAINER_CLASS = "IPF.Note"
+    supported_item_models = ITEM_CLASSES
+    LOCALIZED_NAMES = {
+        "da_DK": ("Slettet post",),
+        "de_DE": ("Gelöschte Elemente",),
+        "en_US": ("Deleted Items",),
+        "es_ES": ("Elementos eliminados",),
+        "fr_CA": ("Éléments supprimés",),
+        "nl_NL": ("Verwijderde items",),
+        "ru_RU": ("Удаленные",),
+        "sv_SE": ("Borttaget",),
+        "zh_CN": ("已删除邮件",),
+    }
 
 
 class Directory(WellknownFolder):
@@ -299,6 +198,23 @@ class DlpPolicyEvaluation(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "dlppolicyevaluation"
     CONTAINER_CLASS = "IPF.StoreItem.DlpPolicyEvaluation"
     supported_from = EXCHANGE_O365
+
+
+class Drafts(WellknownFolder):
+    CONTAINER_CLASS = "IPF.Note"
+    DISTINGUISHED_FOLDER_ID = "drafts"
+    supported_item_models = MESSAGE_ITEM_CLASSES
+    LOCALIZED_NAMES = {
+        "da_DK": ("Kladder",),
+        "de_DE": ("Entwürfe",),
+        "en_US": ("Drafts",),
+        "es_ES": ("Borradores",),
+        "fr_CA": ("Brouillons",),
+        "nl_NL": ("Concepten",),
+        "ru_RU": ("Черновики",),
+        "sv_SE": ("Utkast",),
+        "zh_CN": ("草稿",),
+    }
 
 
 class Favorites(WellknownFolder):
@@ -328,6 +244,23 @@ class IMContactList(WellknownFolder):
     supported_from = EXCHANGE_2013
 
 
+class Inbox(WellknownFolder):
+    CONTAINER_CLASS = "IPF.Note"
+    DISTINGUISHED_FOLDER_ID = "inbox"
+    supported_item_models = MESSAGE_ITEM_CLASSES
+    LOCALIZED_NAMES = {
+        "da_DK": ("Indbakke",),
+        "de_DE": ("Posteingang",),
+        "en_US": ("Inbox",),
+        "es_ES": ("Bandeja de entrada",),
+        "fr_CA": ("Boîte de réception",),
+        "nl_NL": ("Postvak IN",),
+        "ru_RU": ("Входящие",),
+        "sv_SE": ("Inkorgen",),
+        "zh_CN": ("收件箱",),
+    }
+
+
 class Inference(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "inference"
 
@@ -337,9 +270,31 @@ class Journal(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "journal"
 
 
+class JunkEmail(WellknownFolder):
+    CONTAINER_CLASS = "IPF.Note"
+    DISTINGUISHED_FOLDER_ID = "junkemail"
+    supported_item_models = MESSAGE_ITEM_CLASSES
+    LOCALIZED_NAMES = {
+        "da_DK": ("Uønsket e-mail",),
+        "de_DE": ("Junk-E-Mail",),
+        "en_US": ("Junk E-mail",),
+        "es_ES": ("Correo no deseado",),
+        "fr_CA": ("Courrier indésirables",),
+        "nl_NL": ("Ongewenste e-mail",),
+        "ru_RU": ("Нежелательная почта",),
+        "sv_SE": ("Skräppost",),
+        "zh_CN": ("垃圾邮件",),
+    }
+
+
 class LocalFailures(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "localfailures"
     supported_from = EXCHANGE_2013
+
+
+class Messages(WellknownFolder):
+    CONTAINER_CLASS = "IPF.Note"
+    supported_item_models = MESSAGE_ITEM_CLASSES
 
 
 class MsgFolderRoot(WellknownFolder):
@@ -370,6 +325,21 @@ class Notes(WellknownFolder):
 class OneNotePagePreviews(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "onenotepagepreviews"
     supported_from = EXCHANGE_O365
+
+
+class Outbox(Messages):
+    DISTINGUISHED_FOLDER_ID = "outbox"
+    LOCALIZED_NAMES = {
+        "da_DK": ("Udbakke",),
+        "de_DE": ("Postausgang",),
+        "en_US": ("Outbox",),
+        "es_ES": ("Bandeja de salida",),
+        "fr_CA": ("Boîte d'envoi",),
+        "nl_NL": ("Postvak UIT",),
+        "ru_RU": ("Исходящие",),
+        "sv_SE": ("Utkorgen",),
+        "zh_CN": ("发件箱",),
+    }
 
 
 class PeopleCentricConversationBuddies(WellknownFolder):
@@ -425,17 +395,11 @@ class RecipientCache(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "recipientcache"
     CONTAINER_CLASS = "IPF.Contact.RecipientCache"
     supported_from = EXCHANGE_2013
-    LOCALIZED_NAMES = {
-        None: ("RecipientCache",),
-    }
 
 
 class RelevantContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "relevantcontacts"
     CONTAINER_CLASS = "IPF.Note"
-    LOCALIZED_NAMES = {
-        None: ("RelevantContacts",),
-    }
 
 
 class RecoverableItemsDeletions(WellknownFolder):
@@ -470,6 +434,21 @@ class SearchFolders(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "searchfolders"
 
 
+class SentItems(Messages):
+    DISTINGUISHED_FOLDER_ID = "sentitems"
+    LOCALIZED_NAMES = {
+        "da_DK": ("Sendt post",),
+        "de_DE": ("Gesendete Elemente",),
+        "en_US": ("Sent Items",),
+        "es_ES": ("Elementos enviados",),
+        "fr_CA": ("Éléments envoyés",),
+        "nl_NL": ("Verzonden items",),
+        "ru_RU": ("Отправленные",),
+        "sv_SE": ("Skickat",),
+        "zh_CN": ("已发送邮件",),
+    }
+
+
 class ServerFailures(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "serverfailures"
     supported_from = EXCHANGE_2013
@@ -488,6 +467,23 @@ class SyncIssues(WellknownFolder):
     CONTAINER_CLASS = "IPF.Note"
     DISTINGUISHED_FOLDER_ID = "syncissues"
     supported_from = EXCHANGE_2013
+
+
+class Tasks(WellknownFolder):
+    DISTINGUISHED_FOLDER_ID = "tasks"
+    CONTAINER_CLASS = "IPF.Task"
+    supported_item_models = TASK_ITEM_CLASSES
+    LOCALIZED_NAMES = {
+        "da_DK": ("Opgaver",),
+        "de_DE": ("Aufgaben",),
+        "en_US": ("Tasks",),
+        "es_ES": ("Tareas",),
+        "fr_CA": ("Tâches",),
+        "nl_NL": ("Taken",),
+        "ru_RU": ("Задачи",),
+        "sv_SE": ("Uppgifter",),
+        "zh_CN": ("任务",),
+    }
 
 
 class TemporarySaves(WellknownFolder):
@@ -527,10 +523,7 @@ class NonDeletableFolder(Folder):
 
 class AllTodoTasks(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Task"
-    supported_item_models = (Task,)
-    LOCALIZED_NAMES = {
-        None: ("AllTodoTasks",),
-    }
+    supported_item_models = TASK_ITEM_CLASSES
 
 
 class ApplicationData(NonDeletableFolder):
@@ -581,10 +574,7 @@ class ExchangeSyncData(NonDeletableFolder):
 
 class ExternalContacts(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Contact"
-    supported_item_models = (Contact, DistributionList)
-    LOCALIZED_NAMES = {
-        None: ("ExternalContacts",),
-    }
+    supported_item_models = CONTACT_ITEM_CLASSES
 
 
 class Files(NonDeletableFolder):
@@ -602,7 +592,7 @@ class FreebusyData(NonDeletableFolder):
 
 class Friends(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Note"
-    supported_item_models = (Contact, DistributionList)
+    supported_item_models = CONTACT_ITEM_CLASSES
     LOCALIZED_NAMES = {
         "de_DE": ("Bekannte",),
     }
@@ -610,7 +600,7 @@ class Friends(NonDeletableFolder):
 
 class GALContacts(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Contact.GalContacts"
-    supported_item_models = (Contact, DistributionList)
+    supported_item_models = CONTACT_ITEM_CLASSES
     LOCALIZED_NAMES = {
         None: ("GAL Contacts",),
     }
@@ -630,12 +620,12 @@ class MailboxAssociations(NonDeletableFolder):
 
 class MyContactsExtended(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Note"
-    supported_item_models = (Contact, DistributionList)
+    supported_item_models = CONTACT_ITEM_CLASSES
 
 
 class OrganizationalContacts(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Contact.OrganizationalContacts"
-    supported_item_models = (Contact, DistributionList)
+    supported_item_models = CONTACT_ITEM_CLASSES
     LOCALIZED_NAMES = {
         None: ("Organizational Contacts",),
     }
@@ -721,8 +711,8 @@ class WorkingSet(NonDeletableFolder):
 # Folders that do not have a distinguished folder ID but return 'ErrorDeleteDistinguishedFolder' or
 # 'ErrorCannotDeleteObject' when we try to delete them. I can't find any official docs listing these folders.
 NON_DELETABLE_FOLDERS = [
-    ApplicationData,
     AllTodoTasks,
+    ApplicationData,
     Audits,
     CalendarLogging,
     CalendarSearchCache,
@@ -732,8 +722,8 @@ NON_DELETABLE_FOLDERS = [
     DeferredAction,
     ExchangeSyncData,
     ExternalContacts,
-    FreebusyData,
     Files,
+    FreebusyData,
     Friends,
     GALContacts,
     GraphAnalytics,
@@ -743,10 +733,10 @@ NON_DELETABLE_FOLDERS = [
     OrganizationalContacts,
     ParkedMessages,
     PassThroughSearchResults,
-    PersonMetadata,
     PdpProfileV2Secured,
-    Reminders,
+    PersonMetadata,
     RSSFeeds,
+    Reminders,
     Schedule,
     Sharing,
     Shortcuts,
@@ -778,8 +768,8 @@ WELLKNOWN_FOLDERS_IN_ROOT = [
     Favorites,
     FromFavoriteSenders,
     IMContactList,
-    Inference,
     Inbox,
+    Inference,
     Journal,
     JunkEmail,
     LocalFailures,
@@ -798,12 +788,12 @@ WELLKNOWN_FOLDERS_IN_ROOT = [
     QuarantinedEmailDefaultCategory,
     QuickContacts,
     RecipientCache,
-    RelevantContacts,
     RecoverableItemsDeletions,
     RecoverableItemsPurges,
     RecoverableItemsRoot,
     RecoverableItemsSubstrateHolds,
     RecoverableItemsVersions,
+    RelevantContacts,
     SearchFolders,
     SentItems,
     ServerFailures,
@@ -830,12 +820,12 @@ WELLKNOWN_FOLDERS_IN_ARCHIVE_ROOT = [
 
 # Folders that do not have a distinguished ID but have their own container class
 MISC_FOLDERS = [
+    Birthdays,
     CrawlerData,
     EventCheckPoints,
     FolderMemberships,
     FreeBusyCache,
     RecoveryPoints,
-    SwssItems,
     SkypeTeamsMessages,
-    Birthdays,
+    SwssItems,
 ]
