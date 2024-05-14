@@ -50,6 +50,7 @@ Apart from this documentation, we also provide online
 * [Non-account services](#non-account-services)
 * [Troubleshooting](#troubleshooting)
 * [Tests](#tests)
+* [Contributing](#contributing)
 
 ## Installation
 
@@ -2308,12 +2309,13 @@ DEBUG=1 python -m unittest -k test_folder.FolderTest.test_refresh
 
 # Running tests in parallel using the 'unittest-parallel' dependency
 unittest-parallel -j 4 --level=class
+```
 
 ## Contributing
 
 This repo uses pre-commit hooks. Before committing changes, install the hooks:
 
-````bash
+```bash
 pip install pre-commit
 pre-commit install
 pre-commit run
