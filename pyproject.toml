@@ -62,8 +62,9 @@ Changelog = "https://github.com/ecederstrand/exchangelib/blob/master/CHANGELOG.m
 
 [project.optional-dependencies]
 kerberos = ["requests_gssapi"]
+msal = ["msal"]
 sspi = ["requests_negotiate_sspi"]
-complete = ["requests_gssapi", "requests_negotiate_sspi"]
+complete = ["requests_gssapi", "msal", "requests_negotiate_sspi"]
 
 [tool.setuptools.dynamic]
 version = {attr = "exchangelib.__version__"}

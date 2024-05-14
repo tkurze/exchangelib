@@ -60,16 +60,17 @@ You can install this package from PyPI:
 pip install exchangelib
 ```
 
-The default installation does not support Kerberos or SSPI. For additional Kerberos or SSPI support,
-install with the extra `kerberos` or `sspi` dependencies (please note that SSPI is only supported on
+The default installation does not support Kerberos, MSAL or SSPI authentication. For additional support for these,
+install with the extra `kerberos`, `msal` or `sspi` dependencies (please note that SSPI is only supported on
 Windows):
 
 ```bash
 pip install exchangelib[kerberos]
+pip install exchangelib[msal]
 pip install exchangelib[sspi]
 ```
 
-To get both, install as:
+To get all of the above, install as:
 
 ```bash
 pip install exchangelib[complete]
@@ -496,6 +497,8 @@ The [Microsoft Authentication Library](https://github.com/AzureAD/microsoft-auth
 supports obtaining OAuth tokens via a range of different methods. You can use
 MSAL to fetch a token valid for EWS and then only provide the token to this
 library.
+
+Note that MSAL is not supported by default. See [Installation](#installation) for installing with MSAL support.
 
 In this example, we'll do an interactive login using a browser window, so you
 can use the login method supported by your organization, and take advantage of
