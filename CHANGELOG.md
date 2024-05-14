@@ -5,6 +5,13 @@ HEAD
 ----
 
 
+5.4.0
+-----
+- Add `O365InteractiveConfiguration` helper class to set up MSAL auth for O365.
+- Add `exchangelib[msal]` installation flavor to match the above.
+- Various bug fixes related to distinguished folders.
+
+
 5.3.0
 -----
 - Fix various issues related to public folders and archive folders
