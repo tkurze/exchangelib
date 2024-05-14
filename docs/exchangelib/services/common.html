@@ -999,10 +999,15 @@ def attachment_ids_element(items, version, tag=&#34;m:AttachmentIds&#34;):
 
 def parse_folder_elem(elem, folder):
     if isinstance(folder, RootOfHierarchy):
-        return folder.from_xml(elem=elem, account=folder.account)
-    if isinstance(folder, Folder):
-        return folder.from_xml_with_root(elem=elem, root=folder.root)
-    raise ValueError(f&#34;Unsupported folder class: {folder}&#34;)</code></pre>
+        res = folder.from_xml(elem=elem, account=folder.account)
+    elif isinstance(folder, Folder):
+        res = folder.from_xml_with_root(elem=elem, root=folder.root)
+    else:
+        raise ValueError(f&#34;Unsupported folder class: {folder}&#34;)
+    # Not all servers support fetching the DistinguishedFolderId field. Add it back here.
+    if folder._distinguished_id and not res._distinguished_id:
+        res._distinguished_id = folder._distinguished_id
+    return res</code></pre>
 </details>
 </section>
 <section>
@@ -1062,10 +1067,15 @@ def parse_folder_elem(elem, folder):
 </summary>
 <pre><code class="python">def parse_folder_elem(elem, folder):
     if isinstance(folder, RootOfHierarchy):
-        return folder.from_xml(elem=elem, account=folder.account)
-    if isinstance(folder, Folder):
-        return folder.from_xml_with_root(elem=elem, root=folder.root)
-    raise ValueError(f&#34;Unsupported folder class: {folder}&#34;)</code></pre>
+        res = folder.from_xml(elem=elem, account=folder.account)
+    elif isinstance(folder, Folder):
+        res = folder.from_xml_with_root(elem=elem, root=folder.root)
+    else:
+        raise ValueError(f&#34;Unsupported folder class: {folder}&#34;)
+    # Not all servers support fetching the DistinguishedFolderId field. Add it back here.
+    if folder._distinguished_id and not res._distinguished_id:
+        res._distinguished_id = folder._distinguished_id
+    return res</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.services.common.shape_element"><code class="name flex">

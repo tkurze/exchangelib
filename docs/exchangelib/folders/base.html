@@ -68,7 +68,7 @@ from ..properties import (
 )
 from ..queryset import DoesNotExist, SearchableMixIn
 from ..util import TNS, is_iterable, require_id
-from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010, SupportedVersionClassMixIn
+from ..version import EXCHANGE_2007_SP1, EXCHANGE_2010, EXCHANGE_2016, SupportedVersionClassMixIn
 from .collections import FolderCollection, PullSubscription, PushSubscription, StreamingSubscription, SyncCompleted
 from .queryset import DEEP as DEEP_FOLDERS
 from .queryset import MISSING_FOLDER_ERRORS
@@ -105,7 +105,9 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=ID_ELEMENT_CLS)
-    _distinguished_id = IdElementField(field_uri=&#34;folder:DistinguishedFolderId&#34;, value_cls=DistinguishedFolderId)
+    _distinguished_id = IdElementField(
+        field_uri=&#34;folder:DistinguishedFolderId&#34;, value_cls=DistinguishedFolderId, supported_from=EXCHANGE_2016
+    )
     parent_folder_id = EWSElementField(field_uri=&#34;folder:ParentFolderId&#34;, value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri=&#34;folder:FolderClass&#34;, is_required_after_save=True)
     name = CharField(field_uri=&#34;folder:DisplayName&#34;)
@@ -972,6 +974,10 @@ class Folder(BaseFolder):
                     )
             if folder_cls == Folder:
                 log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
+        # Some servers return folders in a FindFolder result that have a DistinguishedFolderId element that the same
+        # server cannot handle in a GetFolder request. Only set the DistinguishedFolderId field if we recognize the ID.
+        if folder._distinguished_id and not folder_cls.DISTINGUISHED_FOLDER_ID:
+            folder._distinguished_id = None
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
 </details>
 </section>
@@ -1014,7 +1020,9 @@ class Folder(BaseFolder):
     ID_ELEMENT_CLS = FolderId
 
     _id = IdElementField(field_uri=&#34;folder:FolderId&#34;, value_cls=ID_ELEMENT_CLS)
-    _distinguished_id = IdElementField(field_uri=&#34;folder:DistinguishedFolderId&#34;, value_cls=DistinguishedFolderId)
+    _distinguished_id = IdElementField(
+        field_uri=&#34;folder:DistinguishedFolderId&#34;, value_cls=DistinguishedFolderId, supported_from=EXCHANGE_2016
+    )
     parent_folder_id = EWSElementField(field_uri=&#34;folder:ParentFolderId&#34;, value_cls=ParentFolderId, is_read_only=True)
     folder_class = CharField(field_uri=&#34;folder:FolderClass&#34;, is_required_after_save=True)
     name = CharField(field_uri=&#34;folder:DisplayName&#34;)
@@ -3101,6 +3109,10 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
                     )
             if folder_cls == Folder:
                 log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
+        # Some servers return folders in a FindFolder result that have a DistinguishedFolderId element that the same
+        # server cannot handle in a GetFolder request. Only set the DistinguishedFolderId field if we recognize the ID.
+        if folder._distinguished_id and not folder_cls.DISTINGUISHED_FOLDER_ID:
+            folder._distinguished_id = None
         return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3181,6 +3193,10 @@ def from_xml_with_root(cls, elem, root):
                 )
         if folder_cls == Folder:
             log.debug(&#34;Fallback to class Folder (folder_class %s, name %s)&#34;, folder.folder_class, folder.name)
+    # Some servers return folders in a FindFolder result that have a DistinguishedFolderId element that the same
+    # server cannot handle in a GetFolder request. Only set the DistinguishedFolderId field if we recognize the ID.
+    if folder._distinguished_id and not folder_cls.DISTINGUISHED_FOLDER_ID:
+        folder._distinguished_id = None
     return folder_cls(root=root, **{f.name: getattr(folder, f.name) for f in folder.FIELDS})</code></pre>
 </details>
 </dd>

@@ -30,7 +30,7 @@
 
 from cached_property import threaded_cached_property
 
-from .credentials import BaseCredentials, BaseOAuth2Credentials
+from .credentials import BaseCredentials, BaseOAuth2Credentials, O365InteractiveCredentials
 from .errors import InvalidEnumValue, InvalidTypeError
 from .protocol import FailFast, RetryPolicy
 from .transport import AUTH_TYPE_MAP, CREDENTIALS_REQUIRED, OAUTH2
@@ -123,7 +123,15 @@ class Configuration:
             f&#34;{k}={getattr(self, k)!r}&#34;
             for k in (&#34;credentials&#34;, &#34;service_endpoint&#34;, &#34;auth_type&#34;, &#34;version&#34;, &#34;retry_policy&#34;)
         )
-        return f&#34;{self.__class__.__name__}({args_str})&#34;</code></pre>
+        return f&#34;{self.__class__.__name__}({args_str})&#34;
+
+
+class O365InteractiveConfiguration(Configuration):
+    SERVER = &#34;outlook.office365.com&#34;
+
+    def __init__(self, client_id, username):
+        credentials = O365InteractiveCredentials(client_id=client_id, username=username)
+        super().__init__(server=self.SERVER, auth_type=OAUTH2, credentials=credentials)</code></pre>
 </details>
 </section>
 <section>
@@ -248,6 +256,10 @@ policies on the Exchange server.</p></div>
         )
         return f&#34;{self.__class__.__name__}({args_str})&#34;</code></pre>
 </details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="exchangelib.configuration.O365InteractiveConfiguration" href="#exchangelib.configuration.O365InteractiveConfiguration">O365InteractiveConfiguration</a></li>
+</ul>
 <h3>Instance variables</h3>
 <dl>
 <dt id="exchangelib.configuration.Configuration.credentials"><code class="name">var <span class="ident">credentials</span></code></dt>
@@ -288,6 +300,53 @@ def credentials(self):
 </dd>
 </dl>
 </dd>
+<dt id="exchangelib.configuration.O365InteractiveConfiguration"><code class="flex name class">
+<span>class <span class="ident">O365InteractiveConfiguration</span></span>
+<span>(</span><span>client_id, username)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Contains information needed to create an authenticated connection to an EWS endpoint.</p>
+<p>The 'credentials' argument contains the credentials needed to authenticate with the server. Multiple credentials
+implementations are available in 'exchangelib.credentials'.</p>
+<p>config = Configuration(credentials=Credentials('john@example.com', 'MY_SECRET'), &hellip;)</p>
+<p>The 'server' and 'service_endpoint' arguments are mutually exclusive. The former must contain only a domain name,
+the latter a full URL:</p>
+<pre><code>config = Configuration(server='example.com', ...)
+config = Configuration(service_endpoint='https://mail.example.com/EWS/Exchange.asmx', ...)
+</code></pre>
+<p>If you know which authentication type the server uses, you add that as a hint in 'auth_type'. Likewise, you can
+add the server version as a hint. This allows to skip the auth type and version guessing routines:</p>
+<pre><code>config = Configuration(auth_type=NTLM, ...)
+config = Configuration(version=Version(build=Build(15, 1, 2, 3)), ...)
+</code></pre>
+<p>You can use 'retry_policy' to define a custom retry policy for handling server connection failures:</p>
+<pre><code>config = Configuration(retry_policy=FaultTolerance(max_wait=3600), ...)
+</code></pre>
+<p>'max_connections' defines the max number of connections allowed for this server. This may be restricted by
+policies on the Exchange server.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class O365InteractiveConfiguration(Configuration):
+    SERVER = &#34;outlook.office365.com&#34;
+
+    def __init__(self, client_id, username):
+        credentials = O365InteractiveCredentials(client_id=client_id, username=username)
+        super().__init__(server=self.SERVER, auth_type=OAUTH2, credentials=credentials)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.configuration.Configuration" href="#exchangelib.configuration.Configuration">Configuration</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.configuration.O365InteractiveConfiguration.SERVER"><code class="name">var <span class="ident">SERVER</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -309,6 +368,12 @@ def credentials(self):
 <ul class="">
 <li><code><a title="exchangelib.configuration.Configuration.credentials" href="#exchangelib.configuration.Configuration.credentials">credentials</a></code></li>
 <li><code><a title="exchangelib.configuration.Configuration.server" href="#exchangelib.configuration.Configuration.server">server</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="exchangelib.configuration.O365InteractiveConfiguration" href="#exchangelib.configuration.O365InteractiveConfiguration">O365InteractiveConfiguration</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.configuration.O365InteractiveConfiguration.SERVER" href="#exchangelib.configuration.O365InteractiveConfiguration.SERVER">SERVER</a></code></li>
 </ul>
 </li>
 </ul>
