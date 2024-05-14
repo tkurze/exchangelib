@@ -307,3 +307,16 @@ class OAuth2AuthorizationCodeCredentials(BaseOAuth2Credentials):
         )
         description = " ".join(filter(None, [client_id, credential]))
         return description or "[underspecified credentials]"
+
+
+class O365InteractiveCredentials(OAuth2AuthorizationCodeCredentials):
+    AUTHORITY = "https://login.microsoftonline.com/organizations"
+    SCOPE = ["EWS.AccessAsUser.All"]
+
+    def __init__(self, client_id, username):
+        import msal
+
+        app = msal.PublicClientApplication(client_id=client_id, authority=self.AUTHORITY)
+        print("A local browser window will be open for you to sign in. CTRL+C to cancel.")
+        access_token = app.acquire_token_interactive(self.SCOPE, login_hint=username)
+        super().__init__(access_token=access_token)

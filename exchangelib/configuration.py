@@ -2,7 +2,7 @@ import logging
 
 from cached_property import threaded_cached_property
 
-from .credentials import BaseCredentials, BaseOAuth2Credentials
+from .credentials import BaseCredentials, BaseOAuth2Credentials, O365InteractiveCredentials
 from .errors import InvalidEnumValue, InvalidTypeError
 from .protocol import FailFast, RetryPolicy
 from .transport import AUTH_TYPE_MAP, CREDENTIALS_REQUIRED, OAUTH2
@@ -96,3 +96,11 @@ class Configuration:
             for k in ("credentials", "service_endpoint", "auth_type", "version", "retry_policy")
         )
         return f"{self.__class__.__name__}({args_str})"
+
+
+class O365InteractiveConfiguration(Configuration):
+    SERVER = "outlook.office365.com"
+
+    def __init__(self, client_id, username):
+        credentials = O365InteractiveCredentials(client_id=client_id, username=username)
+        super().__init__(server=self.SERVER, auth_type=OAUTH2, credentials=credentials)

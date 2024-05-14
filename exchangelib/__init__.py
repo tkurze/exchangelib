@@ -1,7 +1,7 @@
 from .account import Account, Identity
 from .attachments import FileAttachment, ItemAttachment
 from .autodiscover import discover
-from .configuration import Configuration
+from .configuration import Configuration, O365InteractiveConfiguration
 from .credentials import (
     DELEGATE,
     IMPERSONATION,
@@ -78,6 +78,7 @@ __all__ = [
     "Message",
     "NTLM",
     "NoVerifyHTTPAdapter",
+    "O365InteractiveConfiguration",
     "OAUTH2",
     "OAuth2AuthorizationCodeCredentials",
     "OAuth2Credentials",

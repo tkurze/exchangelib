@@ -513,36 +513,14 @@ using the following code:
 
 ```python
 # Script adapted from https://github.com/AzureAD/microsoft-authentication-library-for-python/blob/dev/sample/interactive_sample.py
-from exchangelib import (
-    Configuration,
-    OAUTH2,
-    Account,
-    DELEGATE,
-    OAuth2AuthorizationCodeCredentials,
-)
-import msal
+from exchangelib import DELEGATE, Account, O365InteractiveConfiguration
 
-config = {
-    "authority": "https://login.microsoftonline.com/organizations",
-    "client_id": "MY_CLIENT_ID",
-    "scope": ["EWS.AccessAsUser.All"],
-    "username": "MY_ACCOUNT@example.com",
-    "account": "MY_ACCOUNT@example.com",
-    "server": "outlook.office365.com",
-}
-app = msal.PublicClientApplication(config["client_id"], authority=config["authority"])
-print("A local browser window will be open for you to sign in. CTRL+C to cancel.")
-result = app.acquire_token_interactive(
-    config["scope"], login_hint=config.get("username")
-)
-assert "access_token" in result
-
-creds = OAuth2AuthorizationCodeCredentials(access_token=result)
-conf = Configuration(server=config["server"], auth_type=OAUTH2, credentials=creds)
 a = Account(
-    primary_smtp_address=config["account"],
+    primary_smtp_address="MY_ACCOUNT@example.com",
+    config=O365InteractiveConfiguration(
+        client_id="MY_CLIENT_ID", username="MY_ACCOUNT@example.com"
+    ),
     access_type=DELEGATE,
-    config=conf,
     autodiscover=False,
 )
 print(a.root.tree())
