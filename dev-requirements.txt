@@ -1,0 +1,13 @@
+# For packaging
+build
+pdoc3
+twine
+wheel
+
+# For developing
+pre-commit
+
+# extras
+msal
+requests_gssapi
+requests_negotiate_sspi
