@@ -35,7 +35,7 @@ class AutodiscoverTest(EWSTest):
         super().setUp()
 
         # Enable retries, to make tests more robust
-        Autodiscovery.INITIAL_RETRY_POLICY = FaultTolerance(max_wait=5)
+        Autodiscovery.INITIAL_RETRY_POLICY = self.retry_policy
         AutodiscoverProtocol.RETRY_WAIT = 5
 
         # Each test should start with a clean autodiscover cache
@@ -218,6 +218,7 @@ class AutodiscoverTest(EWSTest):
             ).discover()
 
     def test_failed_login_via_account(self):
+        Autodiscovery.INITIAL_RETRY_POLICY = FaultTolerance(max_wait=2)  # We retry on 401's. Fail faster.
         with self.assertRaises(AutoDiscoverFailed):
             Account(
                 primary_smtp_address=self.account.primary_smtp_address,
