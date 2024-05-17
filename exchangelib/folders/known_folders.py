@@ -668,6 +668,10 @@ class Schedule(NonDeletableFolder):
     pass
 
 
+class ShadowItems(NonDeletableFolder):
+    CONTAINER_CLASS = "IPF.StoreItem.ShadowItems"
+
+
 class Sharing(NonDeletableFolder):
     CONTAINER_CLASS = "IPF.Note"
 
@@ -738,6 +742,7 @@ NON_DELETABLE_FOLDERS = [
     RSSFeeds,
     Reminders,
     Schedule,
+    ShadowItems,
     Sharing,
     Shortcuts,
     Signal,

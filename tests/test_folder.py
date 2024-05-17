@@ -80,6 +80,7 @@ from exchangelib.folders import (
     RootOfHierarchy,
     RSSFeeds,
     SentItems,
+    ShadowItems,
     Sharing,
     Signal,
     SingleFolderQuerySet,
@@ -602,6 +603,8 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.Contact")
                 elif isinstance(f, CalendarSearchCache):
                     self.assertEqual(f.folder_class, "IPF.Appointment")
+                elif isinstance(f, ShadowItems):
+                    self.assertEqual(f.folder_class, "IPF.StoreItem.ShadowItems")
                 else:
                     self.assertIn(f.folder_class, (None, "IPF"), (f.name, f.__class__.__name__, f.folder_class))
                     self.assertIsInstance(f, Folder)
