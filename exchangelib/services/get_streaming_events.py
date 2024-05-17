@@ -48,11 +48,11 @@ class GetStreamingEvents(EWSAccountService):
         return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
+    def _get_soap_parts(cls, response):
         # Pass the response unaltered. We want to use our custom document yielder
         return None, response
 
-    def _get_soap_messages(self, body, **parse_opts):
+    def _get_soap_messages(self, body):
         # 'body' is actually the raw response passed on by '_get_soap_parts'. We want to continuously read the content,
         # looking for complete XML documents. When we have a full document, we want to parse it as if it was a normal
         # XML response.
@@ -61,13 +61,13 @@ class GetStreamingEvents(EWSAccountService):
             xml_log.debug("Response XML (docs counter: %(i)s): %(xml_response)s", dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
-                _, body = super()._get_soap_parts(response=response, **parse_opts)
+                _, body = super()._get_soap_parts(response=response)
             except Exception:
                 r.close()  # Release memory
                 raise
             # TODO: We're skipping ._update_api_version() here because we don't have access to the 'api_version' used.
             # TODO: We should be doing a lot of error handling for ._get_soap_messages().
-            yield from super()._get_soap_messages(body=body, **parse_opts)
+            yield from super()._get_soap_messages(body=body)
             if self.connection_status == self.CLOSED:
                 # Don't wait for the TCP connection to timeout
                 break
@@ -97,9 +97,6 @@ class GetStreamingEvents(EWSAccountService):
         subscriptions_elem = create_element("m:SubscriptionIds")
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, "t:SubscriptionId", subscription_id)
-        if not len(subscriptions_elem):
-            raise ValueError("'subscription_ids' must not be empty")
-
         payload.append(subscriptions_elem)
         add_xml_child(payload, "m:ConnectionTimeout", connection_timeout)
         return payload

@@ -639,10 +639,8 @@ IANA_TO_MS_TIMEZONE_MAP = dict(
 )
 
 # Reverse map from Microsoft timezone ID to IANA timezone name. Non-IANA timezone ID's can be added here.
-MS_TIMEZONE_TO_IANA_MAP = dict(
+MS_TIMEZONE_TO_IANA_MAP = {
     # Use the CLDR map because the IANA map contains deprecated aliases that not all systems support
-    {v[0]: k for k, v in CLDR_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
-    **{
-        "tzone://Microsoft/Utc": "UTC",
-    },
-)
+    **{v[0]: k for k, v in CLDR_TO_MS_TIMEZONE_MAP.items() if v[1] == DEFAULT_TERRITORY},
+    "tzone://Microsoft/Utc": "UTC",
+}

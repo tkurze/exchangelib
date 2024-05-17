@@ -116,9 +116,8 @@ class AutodiscoverCache:
         # Empty both local and persistent cache. Don't fail on non-existing entries because we could end here
         # multiple times due to race conditions.
         domain = key[0]
-        with shelve_open_with_failover(self._storage_file) as db:
-            with suppress(KeyError):
-                del db[str(domain)]
+        with shelve_open_with_failover(self._storage_file) as db, suppress(KeyError):
+            del db[str(domain)]
         with suppress(KeyError):
             del self._protocols[key]
 

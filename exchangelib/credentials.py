@@ -166,7 +166,8 @@ class BaseOAuth2Credentials(BaseCredentials):
             )
         return res
 
-    def token_params(self):
+    @staticmethod
+    def token_params():
         """Extra parameters when requesting the token"""
         return {"include_client_id": True}
 

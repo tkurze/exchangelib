@@ -91,7 +91,7 @@ class FolderCollection(SearchableMixIn):
     def people(self):
         return QuerySet(self).people()
 
-    def view(self, start, end, max_items=None, *args, **kwargs):
+    def view(self, start, end, max_items=None):
         """Implement the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
         only returns the master CalendarItem for recurring items, while 'view' unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
@@ -109,7 +109,7 @@ class FolderCollection(SearchableMixIn):
         :param max_items:  (Default value = None)
         :return:
         """
-        qs = QuerySet(self).filter(*args, **kwargs)
+        qs = QuerySet(self)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
         return qs
 

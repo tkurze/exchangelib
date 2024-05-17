@@ -221,6 +221,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             yield self._elem_to_obj(elem)
 
     def _elem_to_obj(self, elem):
+        """Convert a single XML element to a single Python object"""
         if not self.returns_elements:
             raise RuntimeError("Incorrect call to method when 'returns_elements' is False")
         raise NotImplementedError()
@@ -335,7 +336,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                     self.stop_streaming()
 
     def _handle_response_cookies(self, session):
-        pass
+        """Code to react on response cookies"""
 
     def _get_response(self, payload, api_version):
         """Send the actual HTTP request and get the response."""
@@ -375,13 +376,13 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             v for v in self.supported_api_versions() if v != self._version_hint.api_version
         )
 
-    def _get_response_xml(self, payload, **parse_opts):
+    def _get_response_xml(self, payload):
         """Send the payload to the server and return relevant elements from the result. Several things happen here:
-          * The payload is wrapped in SOAP headers and sent to the server
-          * The Exchange API version is negotiated and stored in the protocol object
-          * Connection errors are handled and possibly reraised as ErrorServerBusy
-          * SOAP errors are raised
-          * EWS errors are raised, or passed on to the caller
+          * Wraps the payload is wrapped in SOAP headers and sends to the server
+          * Negotiates the Exchange API version and stores it in the protocol object
+          * Handles connection errors and possibly re-raises them as ErrorServerBusy
+          * Raises SOAP errors
+          * Raises EWS errors or passes them on to the caller
 
         :param payload: The request payload, as an XML object
         :return: A generator of XML objects or None if the service does not return a result
@@ -397,15 +398,15 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
                 # Let 'requests' decode raw data automatically
                 r.raw.decode_content = True
             try:
-                header, body = self._get_soap_parts(response=r, **parse_opts)
+                header, body = self._get_soap_parts(response=r)
             except Exception:
                 r.close()  # Release memory
                 raise
             # The body may contain error messages from Exchange, but we still want to collect version info
             if header is not None:
-                self._update_api_version(api_version=api_version, header=header, **parse_opts)
+                self._update_api_version(api_version=api_version, header=header)
             try:
-                return self._get_soap_messages(body=body, **parse_opts)
+                return self._get_soap_messages(body=body)
             except (
                 ErrorInvalidServerVersion,
                 ErrorIncorrectSchemaVersion,
@@ -438,7 +439,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         self.protocol.retry_policy.back_off(e.back_off)
         # We'll warn about this later if we actually need to sleep
 
-    def _update_api_version(self, api_version, header, **parse_opts):
+    def _update_api_version(self, api_version, header):
         """Parse the server version contained in SOAP headers and update the version hint stored by the caller, if
         necessary.
         """
@@ -471,7 +472,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
         return f"{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage"
 
     @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
+    def _get_soap_parts(cls, response):
         """Split the SOAP response into its headers and body elements."""
         try:
             root = to_xml(response.iter_content())
@@ -486,7 +487,7 @@ class EWSService(SupportedVersionClassMixIn, metaclass=abc.ABCMeta):
             raise MalformedResponseError("No Body element in SOAP response")
         return header, body
 
-    def _get_soap_messages(self, body, **parse_opts):
+    def _get_soap_messages(self, body):
         """Return the elements in the response containing the response messages. Raises any SOAP exceptions."""
         response = body.find(self._response_tag())
         if response is None:

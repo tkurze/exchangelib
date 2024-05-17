@@ -422,10 +422,8 @@ class BytesGeneratorIO(io.RawIOBase):
         return self._tell
 
     def read(self, size=-1):
-        # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth
-        # can't assume how many bytes next returns so stash any extra in `self._next`
-        if self.closed:
-            raise ValueError("read from a closed file")
+        # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth.
+        # We can't assume how many bytes next returns so stash any extra in `self._next`.
         if self._next is None:
             return b""
         if size is None:
@@ -534,10 +532,9 @@ def to_xml(bytes_content):
             offending_line = stream.read().splitlines()[e.lineno - 1]
         except (IndexError, io.UnsupportedOperation):
             raise ParseError(str(e), "<not from file>", e.lineno, e.offset)
-        else:
-            offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
-            msg = f'{e}\nOffending text: [...]{offending_excerpt.decode("utf-8", errors="ignore")}[...]'
-            raise ParseError(msg, "<not from file>", e.lineno, e.offset)
+        offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
+        msg = f'{e}\nOffending text: [...]{offending_excerpt.decode("utf-8", errors="ignore")}[...]'
+        raise ParseError(msg, "<not from file>", e.lineno, e.offset)
     except TypeError:
         with suppress(IndexError, io.UnsupportedOperation):
             stream.seek(0)
@@ -576,7 +573,8 @@ def is_xml(text):
 class PrettyXmlHandler(logging.StreamHandler):
     """A steaming log handler that prettifies log statements containing XML when output is a terminal."""
 
-    def parse_bytes(self, xml_bytes):
+    @staticmethod
+    def parse_bytes(xml_bytes):
         return to_xml(xml_bytes)
 
     def prettify_xml(self, xml_bytes):
@@ -671,7 +669,7 @@ class DummyResponse:
         return self.content
 
     def close(self):
-        pass
+        """We don't have an actual socket to close"""
 
 
 def get_domain(email):

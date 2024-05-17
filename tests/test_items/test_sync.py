@@ -30,9 +30,6 @@ class SyncTest(BaseItemTest):
         self.assertEqual(
             e.exception.args[0], f"'event_types' values must consist of values in {SubscribeToPull.EVENT_TYPES}"
         )
-        with self.assertRaises(ValueError) as e:
-            self.account.inbox.subscribe_to_pull(event_types=[])
-        self.assertEqual(e.exception.args[0], "'event_types' must not be empty")
 
     def test_pull_subscribe(self):
         self.account.affinity_cookie = None
@@ -409,11 +406,6 @@ class SyncTest(BaseItemTest):
     def test_streaming_invalid_subscription(self):
         # Test that we can get the failing subscription IDs from the response message
         test_folder = self.account.drafts
-
-        # Test with empty list of subscription
-        with self.assertRaises(ValueError) as e:
-            list(test_folder.get_streaming_events([], connection_timeout=1, max_notifications_returned=1))
-        self.assertEqual(e.exception.args[0], "'subscription_ids' must not be empty")
 
         # Test with bad connection_timeout
         with self.assertRaises(TypeError) as e:

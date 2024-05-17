@@ -293,7 +293,6 @@ class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
         is_searchable=True,
         is_attribute=False,
         default=None,
-        *args,
         **kwargs,
     ):
         self.name = name  # Usually set by the EWSMeta metaclass
@@ -310,7 +309,7 @@ class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
         self.is_searchable = is_searchable
         # When true, this field is treated as an XML attribute instead of an element
         self.is_attribute = is_attribute
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):

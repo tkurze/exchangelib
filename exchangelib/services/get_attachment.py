@@ -65,23 +65,20 @@ class GetAttachment(EWSAccountService):
         payload.append(attachment_ids_element(items=items, version=self.account.version))
         return payload
 
-    def _update_api_version(self, api_version, header, **parse_opts):
-        if not parse_opts.get("stream_file_content", False):
-            super()._update_api_version(api_version, header, **parse_opts)
+    def _update_api_version(self, api_version, header):
+        if not self.streaming:
+            super()._update_api_version(api_version, header)
         # TODO: We're skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
-    @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
-        if not parse_opts.get("stream_file_content", False):
-            return super()._get_soap_parts(response, **parse_opts)
-
+    def _get_soap_parts(self, response):
+        if not self.streaming:
+            return super()._get_soap_parts(response)
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
-    def _get_soap_messages(self, body, **parse_opts):
-        if not parse_opts.get("stream_file_content", False):
-            return super()._get_soap_messages(body, **parse_opts)
-
+    def _get_soap_messages(self, body):
+        if not self.streaming:
+            return super()._get_soap_messages(body)
         # 'body' is actually the raw response passed on by '_get_soap_parts'
         r = body
         parser = StreamingBase64Parser()
@@ -101,13 +98,14 @@ class GetAttachment(EWSAccountService):
         )
         self.streaming = True
         try:
-            yield from self._get_response_xml(payload=payload, stream_file_content=True)
+            yield from self._get_response_xml(payload=payload)
         except ElementNotFound as enf:
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
             # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
             response = DummyResponse(content=enf.data)
             _, body = super()._get_soap_parts(response=response)
+            # TODO: We're skipping ._update_api_version() here because we don't have access to the 'api_version' used.
             res = super()._get_soap_messages(body=body)
             for e in self._get_elements_in_response(response=res):
                 if isinstance(e, Exception):

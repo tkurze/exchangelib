@@ -53,14 +53,10 @@ class GetUserSettings(EWSService):
             mailbox = create_element("a:Mailbox")
             set_xml_value(mailbox, user)
             add_xml_child(users_elem, "a:User", mailbox)
-        if not len(users_elem):
-            raise ValueError("'users' must not be empty")
         request.append(users_elem)
         requested_settings = create_element("a:RequestedSettings")
         for setting in settings:
             add_xml_child(requested_settings, "a:Setting", UserResponse.SETTINGS_MAP[setting])
-        if not len(requested_settings):
-            raise ValueError("'requested_settings' must not be empty")
         request.append(requested_settings)
         payload.append(request)
         return payload

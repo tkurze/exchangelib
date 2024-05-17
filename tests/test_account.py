@@ -174,13 +174,16 @@ class AccountTest(EWSTest):
     def test_mail_tips(self):
         # Test that mail tips work
         self.assertEqual(self.account.mail_tips.recipient_address.email_address, self.account.primary_smtp_address)
-        # recipients must not be empty
-        list(
-            GetMailTips(protocol=self.account.protocol).call(
-                sending_as=SendingAs(email_address=self.account.primary_smtp_address),
-                recipients=[],
-                mail_tips_requested="All",
-            )
+        # recipients may be empty
+        self.assertEqual(
+            list(
+                GetMailTips(protocol=self.account.protocol).call(
+                    sending_as=SendingAs(email_address=self.account.primary_smtp_address),
+                    recipients=[],
+                    mail_tips_requested="All",
+                )
+            ),
+            [],
         )
         xml = b"""\
 <?xml version="1.0" encoding="utf-8"?>
