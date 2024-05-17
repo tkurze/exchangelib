@@ -37,15 +37,8 @@ Auth type: {self.auth_type}"""
         return get_autodiscover_authtype(protocol=self)
 
     def get_user_settings(self, user, settings=None):
-        if not settings:
-            settings = [
-                "user_dn",
-                "mailbox_dn",
-                "user_display_name",
-                "auto_discover_smtp_address",
-                "external_ews_url",
-                "ews_supported_schemas",
-            ]
+        if settings is None:
+            settings = sorted(UserResponse.SETTINGS_MAP.keys())
         for setting in settings:
             if setting not in UserResponse.SETTINGS_MAP:
                 raise ValueError(

@@ -2018,7 +2018,7 @@ class UserResponse(EWSElement):
         "external_mailbox_server": "ExternalMailboxServer",
         "external_mailbox_server_requires_ssl": "ExternalMailboxServerRequiresSSL",
         "external_mailbox_server_authentication_methods": "ExternalMailboxServerAuthenticationMethods",
-        "ecp_voicemail_url_fragment,": "EcpVoicemailUrlFragment,",
+        "ecp_voicemail_url_fragment,": "EcpVoicemailUrlFragment",
         "ecp_email_subscriptions_url_fragment": "EcpEmailSubscriptionsUrlFragment",
         "ecp_text_messaging_url_fragment": "EcpTextMessagingUrlFragment",
         "ecp_delivery_report_url_fragment": "EcpDeliveryReportUrlFragment",
@@ -2091,15 +2091,21 @@ class UserResponse(EWSElement):
         if self.error_code == "InvalidUser":
             raise ErrorNonExistentMailbox(self.error_message)
         if self.error_code in (
+            "InvalidDomain",
             "InvalidRequest",
             "InvalidSetting",
-            "SettingIsNotAvailable",
-            "InvalidDomain",
             "NotFederated",
+            "SettingIsNotAvailable",
         ):
             raise AutoDiscoverFailed(f"{self.error_code}: {self.error_message}")
-        if self.user_settings_errors:
-            raise AutoDiscoverFailed(f"User settings errors: {self.user_settings_errors}")
+        errors_to_report = {}
+        for field_name, (error, message) in (self.user_settings_errors or {}).items():
+            if error in ("InvalidSetting", "SettingIsNotAvailable") and field_name in self.SETTINGS_MAP:
+                # Setting is not available for this user or is unknown to this server. Harmless.
+                continue
+            errors_to_report[field_name] = (error, message)
+        if errors_to_report:
+            raise AutoDiscoverFailed(f"User settings errors: {errors_to_report}")
 
     @classmethod
     def parse_elem(cls, elem):

@@ -792,8 +792,8 @@ class AutodiscoverTest(EWSTest):
             UserResponse(error_code="InvalidRequest", error_message="FOO").raise_errors()
         self.assertEqual(e.exception.args[0], "InvalidRequest: FOO")
         with self.assertRaises(AutoDiscoverFailed) as e:
-            UserResponse(user_settings_errors={"FOO": "BAR"}).raise_errors()
-        self.assertEqual(e.exception.args[0], "User settings errors: {'FOO': 'BAR'}")
+            UserResponse(user_settings_errors={"foo": ("BAR", "BAZ")}).raise_errors()
+        self.assertEqual(e.exception.args[0], "User settings errors: {'foo': ('BAR', 'BAZ')}")
 
     def test_del_on_error(self):
         # Test that __del__ can handle exceptions on close()
