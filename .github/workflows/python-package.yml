@@ -65,6 +65,7 @@ jobs:
         python -m pip install git+https://github.com/cython/cython.git
         python -m pip install git+https://github.com/lxml/lxml.git
         python -m pip install git+https://github.com/yaml/pyyaml.git
+        python -m pip install git+https://github.com/python-cffi/cffi.git
 
     - name: Install dependencies
       continue-on-error: ${{ matrix.allowed_failure || false }}
