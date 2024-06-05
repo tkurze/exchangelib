@@ -67,16 +67,19 @@ class AllCategorizedItems(WellknownFolder):
 class AllContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "allcontacts"
     CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
 
 
 class AllItems(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "allitems"
     CONTAINER_CLASS = "IPF"
+    supported_from = EXCHANGE_O365
 
 
 class AllPersonMetadata(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "allpersonmetadata"
     CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
 
 
 class ArchiveDeletedItems(WellknownFolder):
@@ -139,6 +142,7 @@ class Calendar(WellknownFolder):
 class CompanyContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "companycontacts"
     CONTAINER_CLASS = "IPF.Contact.Company"
+    supported_from = EXCHANGE_O365
     supported_item_models = CONTACT_ITEM_CLASSES
     LOCALIZED_NAMES = {
         "da_DK": ("Firmaer",),
@@ -233,6 +237,7 @@ class FolderMemberships(Folder):
 class FromFavoriteSenders(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "fromfavoritesenders"
     CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
     LOCALIZED_NAMES = {
         "da_DK": ("Personer jeg kender",),
     }
@@ -263,6 +268,7 @@ class Inbox(WellknownFolder):
 
 class Inference(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "inference"
+    supported_from = EXCHANGE_O365
 
 
 class Journal(WellknownFolder):
@@ -345,6 +351,7 @@ class Outbox(Messages):
 class PeopleCentricConversationBuddies(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "peoplecentricconversationbuddies"
     CONTAINER_CLASS = "IPF.Contact.PeopleCentricConversationBuddies"
+    supported_from = EXCHANGE_O365
     LOCALIZED_NAMES = {
         None: ("PeopleCentricConversation Buddies",),
     }
@@ -400,6 +407,7 @@ class RecipientCache(WellknownFolder):
 class RelevantContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "relevantcontacts"
     CONTAINER_CLASS = "IPF.Note"
+    supported_from = EXCHANGE_O365
 
 
 class RecoverableItemsDeletions(WellknownFolder):
@@ -456,6 +464,7 @@ class ServerFailures(WellknownFolder):
 
 class SharePointNotifications(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "sharepointnotifications"
+    supported_from = EXCHANGE_O365
 
 
 class ShortNotes(WellknownFolder):
@@ -488,6 +497,7 @@ class Tasks(WellknownFolder):
 
 class TemporarySaves(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "temporarysaves"
+    supported_from = EXCHANGE_O365
 
 
 class ToDoSearch(WellknownFolder):
