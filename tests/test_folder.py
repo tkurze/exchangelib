@@ -34,7 +34,7 @@ from exchangelib.folders import (
     Calendar,
     CalendarSearchCache,
     CommonViews,
-    Companies,
+    CompanyContacts,
     Contacts,
     ConversationSettings,
     CrawlerData,
@@ -553,7 +553,7 @@ class FolderTest(EWSTest):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.Signal")
                 elif isinstance(f, PdpProfileV2Secured):
                     self.assertEqual(f.folder_class, "IPF.StoreItem.PdpProfileSecured")
-                elif isinstance(f, Companies):
+                elif isinstance(f, CompanyContacts):
                     self.assertEqual(f.folder_class, "IPF.Contact.Company")
                 elif isinstance(f, OrganizationalContacts):
                     self.assertEqual(f.folder_class, "IPF.Contact.OrganizationalContacts")

@@ -136,7 +136,7 @@ class Calendar(WellknownFolder):
         return FolderCollection(account=self.account, folders=[self]).view(*args, **kwargs)
 
 
-class Companies(WellknownFolder):
+class CompanyContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = "companycontacts"
     CONTAINER_CLASS = "IPF.Contact.Company"
     supported_item_models = CONTACT_ITEM_CLASSES
@@ -762,7 +762,7 @@ WELLKNOWN_FOLDERS_IN_ROOT = [
     AllItems,
     AllPersonMetadata,
     Calendar,
-    Companies,
+    CompanyContacts,
     Conflicts,
     Contacts,
     ConversationHistory,

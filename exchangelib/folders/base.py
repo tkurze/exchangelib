@@ -247,7 +247,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         from .known_folders import (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -270,7 +270,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         for folder_cls in (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
