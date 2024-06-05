@@ -15,7 +15,7 @@ HEAD
 5.3.0
 -----
 - Fix various issues related to public folders and archive folders
-- Support read-write for ``Contact.im_addresses`
+- Support read-write for `Contact.im_addresses`
 - Improve reporting of inbox rule validation errors
 
 
@@ -857,7 +857,7 @@ shared_calendar = SingleFolderQuerySet(
 - Removed `fetch(.., with_extra=True)` in favor of the more fine-grained `fetch(.., only_fields=[...])`
 - Added a `QuerySet` class that supports QuerySet-returning methods
   `filter()`, `exclude()`, `only()`, `order_by()`,
-  `reverse()``values()` and `values_list()` that all allow for chaining. `QuerySet` also has methods `iterator()`
+  `reverse()`, `values()` and `values_list()` that all allow for chaining. `QuerySet` also has methods `iterator()`
   , `get()`,
   `count()`, `exists()` and `delete()`. All these methods behave like their counterparts in Django.
 
