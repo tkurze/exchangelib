@@ -5,6 +5,13 @@ HEAD
 ----
 
 
+5.4.1
+-----
+- Fix traversal of public folders in `Account.public_folders_root`
+- Mark certain distinguished folders as only supported on newer Exchange versions
+- Fetch *all* autodiscover information by default
+
+
 5.4.0
 -----
 - Add `O365InteractiveConfiguration` helper class to set up MSAL auth for O365.
