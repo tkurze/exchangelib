@@ -450,10 +450,8 @@ class BytesGeneratorIO(io.RawIOBase):
         return self._tell
 
     def read(self, size=-1):
-        # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth
-        # can&#39;t assume how many bytes next returns so stash any extra in `self._next`
-        if self.closed:
-            raise ValueError(&#34;read from a closed file&#34;)
+        # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth.
+        # We can&#39;t assume how many bytes next returns so stash any extra in `self._next`.
         if self._next is None:
             return b&#34;&#34;
         if size is None:
@@ -562,10 +560,9 @@ def to_xml(bytes_content):
             offending_line = stream.read().splitlines()[e.lineno - 1]
         except (IndexError, io.UnsupportedOperation):
             raise ParseError(str(e), &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
-        else:
-            offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
-            msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
-            raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
+        offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
+        msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
+        raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
     except TypeError:
         with suppress(IndexError, io.UnsupportedOperation):
             stream.seek(0)
@@ -604,7 +601,8 @@ def is_xml(text):
 class PrettyXmlHandler(logging.StreamHandler):
     &#34;&#34;&#34;A steaming log handler that prettifies log statements containing XML when output is a terminal.&#34;&#34;&#34;
 
-    def parse_bytes(self, xml_bytes):
+    @staticmethod
+    def parse_bytes(xml_bytes):
         return to_xml(xml_bytes)
 
     def prettify_xml(self, xml_bytes):
@@ -699,7 +697,7 @@ class DummyResponse:
         return self.content
 
     def close(self):
-        pass
+        &#34;&#34;&#34;We don&#39;t have an actual socket to close&#34;&#34;&#34;
 
 
 def get_domain(email):
@@ -1544,10 +1542,9 @@ Response XML: %(xml_response)s&#34;&#34;&#34;
             offending_line = stream.read().splitlines()[e.lineno - 1]
         except (IndexError, io.UnsupportedOperation):
             raise ParseError(str(e), &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
-        else:
-            offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
-            msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
-            raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
+        offending_excerpt = offending_line[max(0, e.offset - 20) : e.offset + 20]
+        msg = f&#39;{e}\nOffending text: [...]{offending_excerpt.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)}[...]&#39;
+        raise ParseError(msg, &#34;&lt;not from file&gt;&#34;, e.lineno, e.offset)
     except TypeError:
         with suppress(IndexError, io.UnsupportedOperation):
             stream.seek(0)
@@ -1787,10 +1784,8 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         return self._tell
 
     def read(self, size=-1):
-        # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth
-        # can&#39;t assume how many bytes next returns so stash any extra in `self._next`
-        if self.closed:
-            raise ValueError(&#34;read from a closed file&#34;)
+        # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth.
+        # We can&#39;t assume how many bytes next returns so stash any extra in `self._next`.
         if self._next is None:
             return b&#34;&#34;
         if size is None:
@@ -1851,10 +1846,8 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read(self, size=-1):
-    # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth
-    # can&#39;t assume how many bytes next returns so stash any extra in `self._next`
-    if self.closed:
-        raise ValueError(&#34;read from a closed file&#34;)
+    # requests `iter_content()` auto-adjusts the number of bytes based on bandwidth.
+    # We can&#39;t assume how many bytes next returns so stash any extra in `self._next`.
     if self._next is None:
         return b&#34;&#34;
     if size is None:
@@ -2022,7 +2015,7 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
         return self.content
 
     def close(self):
-        pass</code></pre>
+        &#34;&#34;&#34;We don&#39;t have an actual socket to close&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -2030,13 +2023,13 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <span>def <span class="ident">close</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>We don't have an actual socket to close</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close(self):
-    pass</code></pre>
+    &#34;&#34;&#34;We don&#39;t have an actual socket to close&#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.DummyResponse.iter_content"><code class="name flex">
@@ -2116,7 +2109,8 @@ Omitting <code>getvalue</code> forces lxml to stream the request through <code>r
 <pre><code class="python">class PrettyXmlHandler(logging.StreamHandler):
     &#34;&#34;&#34;A steaming log handler that prettifies log statements containing XML when output is a terminal.&#34;&#34;&#34;
 
-    def parse_bytes(self, xml_bytes):
+    @staticmethod
+    def parse_bytes(xml_bytes):
         return to_xml(xml_bytes)
 
     def prettify_xml(self, xml_bytes):
@@ -2189,6 +2183,20 @@ def highlight_xml(xml_str):
     return highlight(xml_str, XmlLexer(), TerminalFormatter()).rstrip()</code></pre>
 </details>
 </dd>
+<dt id="exchangelib.util.PrettyXmlHandler.parse_bytes"><code class="name flex">
+<span>def <span class="ident">parse_bytes</span></span>(<span>xml_bytes)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def parse_bytes(xml_bytes):
+    return to_xml(xml_bytes)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -2244,19 +2252,6 @@ def highlight_xml(xml_str):
         return self.stream.isatty()
     except AttributeError:
         return False</code></pre>
-</details>
-</dd>
-<dt id="exchangelib.util.PrettyXmlHandler.parse_bytes"><code class="name flex">
-<span>def <span class="ident">parse_bytes</span></span>(<span>self, xml_bytes)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parse_bytes(self, xml_bytes):
-    return to_xml(xml_bytes)</code></pre>
 </details>
 </dd>
 <dt id="exchangelib.util.PrettyXmlHandler.prettify_xml"><code class="name flex">

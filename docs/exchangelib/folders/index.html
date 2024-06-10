@@ -51,7 +51,7 @@ from .known_folders import (
     CalendarLogging,
     CalendarSearchCache,
     CommonViews,
-    Companies,
+    CompanyContacts,
     Conflicts,
     Contacts,
     ConversationHistory,
@@ -119,6 +119,7 @@ from .known_folders import (
     SearchFolders,
     SentItems,
     ServerFailures,
+    ShadowItems,
     SharePointNotifications,
     Sharing,
     Shortcuts,
@@ -166,7 +167,7 @@ __all__ = [
     &#34;CalendarLogging&#34;,
     &#34;CalendarSearchCache&#34;,
     &#34;CommonViews&#34;,
-    &#34;Companies&#34;,
+    &#34;CompanyContacts&#34;,
     &#34;Conflicts&#34;,
     &#34;Contacts&#34;,
     &#34;ConversationHistory&#34;,
@@ -247,6 +248,7 @@ __all__ = [
     &#34;SearchFolders&#34;,
     &#34;SentItems&#34;,
     &#34;ServerFailures&#34;,
+    &#34;ShadowItems&#34;,
     &#34;SharePointNotifications&#34;,
     &#34;Sharing&#34;,
     &#34;ShortNotes&#34;,
@@ -473,7 +475,8 @@ __all__ = [
 </summary>
 <pre><code class="python">class AllContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;allcontacts&#34;
-    CONTAINER_CLASS = &#34;IPF.Note&#34;</code></pre>
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -493,6 +496,10 @@ __all__ = [
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.AllContacts.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.AllContacts.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -547,7 +554,8 @@ __all__ = [
 </summary>
 <pre><code class="python">class AllItems(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;allitems&#34;
-    CONTAINER_CLASS = &#34;IPF&#34;</code></pre>
+    CONTAINER_CLASS = &#34;IPF&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -567,6 +575,10 @@ __all__ = [
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.AllItems.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.AllItems.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -621,7 +633,8 @@ __all__ = [
 </summary>
 <pre><code class="python">class AllPersonMetadata(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;allpersonmetadata&#34;
-    CONTAINER_CLASS = &#34;IPF.Note&#34;</code></pre>
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -641,6 +654,10 @@ __all__ = [
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.AllPersonMetadata.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.AllPersonMetadata.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1695,7 +1712,7 @@ __all__ = [
         from .known_folders import (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -1718,7 +1735,7 @@ __all__ = [
         for folder_cls in (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -2377,7 +2394,7 @@ def folder_cls_from_container_class(container_class):
     from .known_folders import (
         ApplicationData,
         Calendar,
-        Companies,
+        CompanyContacts,
         Contacts,
         ConversationSettings,
         CrawlerData,
@@ -2400,7 +2417,7 @@ def folder_cls_from_container_class(container_class):
     for folder_cls in (
         ApplicationData,
         Calendar,
-        Companies,
+        CompanyContacts,
         Contacts,
         ConversationSettings,
         CrawlerData,
@@ -3883,8 +3900,8 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </li>
 </ul>
 </dd>
-<dt id="exchangelib.folders.Companies"><code class="flex name class">
-<span>class <span class="ident">Companies</span></span>
+<dt id="exchangelib.folders.CompanyContacts"><code class="flex name class">
+<span>class <span class="ident">CompanyContacts</span></span>
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
@@ -3893,9 +3910,10 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Companies(WellknownFolder):
+<pre><code class="python">class CompanyContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;companycontacts&#34;
     CONTAINER_CLASS = &#34;IPF.Contact.Company&#34;
+    supported_from = EXCHANGE_O365
     supported_item_models = CONTACT_ITEM_CLASSES
     LOCALIZED_NAMES = {
         &#34;da_DK&#34;: (&#34;Firmaer&#34;,),
@@ -3914,19 +3932,23 @@ def update_user_configuration(self, name, dictionary=None, xml_data=None, binary
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="exchangelib.folders.Companies.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
+<dt id="exchangelib.folders.CompanyContacts.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.folders.Companies.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dt id="exchangelib.folders.CompanyContacts.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.folders.Companies.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dt id="exchangelib.folders.CompanyContacts.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="exchangelib.folders.Companies.supported_item_models"><code class="name">var <span class="ident">supported_item_models</span></code></dt>
+<dt id="exchangelib.folders.CompanyContacts.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.CompanyContacts.supported_item_models"><code class="name">var <span class="ident">supported_item_models</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -5711,7 +5733,7 @@ def get_distinguished(cls, root):
     def people(self):
         return QuerySet(self).people()
 
-    def view(self, start, end, max_items=None, *args, **kwargs):
+    def view(self, start, end, max_items=None):
         &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
         only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
@@ -5729,7 +5751,7 @@ def get_distinguished(cls, root):
         :param max_items:  (Default value = None)
         :return:
         &#34;&#34;&#34;
-        qs = QuerySet(self).filter(*args, **kwargs)
+        qs = QuerySet(self)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
         return qs
 
@@ -6816,7 +6838,7 @@ sync methods.</p></div>
 </details>
 </dd>
 <dt id="exchangelib.folders.FolderCollection.view"><code class="name flex">
-<span>def <span class="ident">view</span></span>(<span>self, start, end, max_items=None, *args, **kwargs)</span>
+<span>def <span class="ident">view</span></span>(<span>self, start, end, max_items=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Implement the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
@@ -6836,7 +6858,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def view(self, start, end, max_items=None, *args, **kwargs):
+<pre><code class="python">def view(self, start, end, max_items=None):
     &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
     only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
     CalendarItem occurrences as one would normally expect when presenting a calendar.
@@ -6854,7 +6876,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
     :param max_items:  (Default value = None)
     :return:
     &#34;&#34;&#34;
-    qs = QuerySet(self).filter(*args, **kwargs)
+    qs = QuerySet(self)
     qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
     return qs</code></pre>
 </details>
@@ -7523,6 +7545,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <pre><code class="python">class FromFavoriteSenders(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;fromfavoritesenders&#34;
     CONTAINER_CLASS = &#34;IPF.Note&#34;
+    supported_from = EXCHANGE_O365
     LOCALIZED_NAMES = {
         &#34;da_DK&#34;: (&#34;Personer jeg kender&#34;,),
     }</code></pre>
@@ -7549,6 +7572,10 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.FromFavoriteSenders.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.FromFavoriteSenders.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -7925,7 +7952,8 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Inference(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#34;inference&#34;</code></pre>
+    DISTINGUISHED_FOLDER_ID = &#34;inference&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7941,6 +7969,10 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.folders.Inference.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.Inference.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -8717,6 +8749,7 @@ MultipleObjectsReturned if there are multiple results.</p></div>
 <li><a title="exchangelib.folders.known_folders.RSSFeeds" href="known_folders.html#exchangelib.folders.known_folders.RSSFeeds">RSSFeeds</a></li>
 <li><a title="exchangelib.folders.known_folders.Reminders" href="known_folders.html#exchangelib.folders.known_folders.Reminders">Reminders</a></li>
 <li><a title="exchangelib.folders.known_folders.Schedule" href="known_folders.html#exchangelib.folders.known_folders.Schedule">Schedule</a></li>
+<li><a title="exchangelib.folders.known_folders.ShadowItems" href="known_folders.html#exchangelib.folders.known_folders.ShadowItems">ShadowItems</a></li>
 <li><a title="exchangelib.folders.known_folders.Sharing" href="known_folders.html#exchangelib.folders.known_folders.Sharing">Sharing</a></li>
 <li><a title="exchangelib.folders.known_folders.Shortcuts" href="known_folders.html#exchangelib.folders.known_folders.Shortcuts">Shortcuts</a></li>
 <li><a title="exchangelib.folders.known_folders.Signal" href="known_folders.html#exchangelib.folders.known_folders.Signal">Signal</a></li>
@@ -9328,6 +9361,7 @@ def is_deletable(self):
 <pre><code class="python">class PeopleCentricConversationBuddies(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;peoplecentricconversationbuddies&#34;
     CONTAINER_CLASS = &#34;IPF.Contact.PeopleCentricConversationBuddies&#34;
+    supported_from = EXCHANGE_O365
     LOCALIZED_NAMES = {
         None: (&#34;PeopleCentricConversation Buddies&#34;,),
     }</code></pre>
@@ -9354,6 +9388,10 @@ def is_deletable(self):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES"><code class="name">var <span class="ident">LOCALIZED_NAMES</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.PeopleCentricConversationBuddies.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -9560,6 +9598,19 @@ def is_deletable(self):
         super().__init__(**kwargs)
         if self._distinguished_id:
             self._distinguished_id.mailbox = None  # See DistinguishedFolderId.clean()
+
+    @property
+    def _folders_map(self):
+        # Top-level public folders may point to the root folder of the owning account and not the public folders root
+        # of this account. This breaks the assumption of get_children(). Fix it by overwriting the parent folder.
+        fix_parents = self._subfolders is None
+        res = super()._folders_map
+        if fix_parents:
+            with self._subfolders_lock:
+                for f in res.values():
+                    if f.id != self.id:
+                        f.parent = self
+        return res
 
     def get_children(self, folder):
         # EWS does not allow deep traversal of public folders, so self._folders_map will only populate the top-level
@@ -10846,7 +10897,8 @@ def is_deletable(self):
 </summary>
 <pre><code class="python">class RelevantContacts(WellknownFolder):
     DISTINGUISHED_FOLDER_ID = &#34;relevantcontacts&#34;
-    CONTAINER_CLASS = &#34;IPF.Note&#34;</code></pre>
+    CONTAINER_CLASS = &#34;IPF.Note&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -10866,6 +10918,10 @@ def is_deletable(self):
 <div class="desc"></div>
 </dd>
 <dt id="exchangelib.folders.RelevantContacts.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.RelevantContacts.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -11966,6 +12022,75 @@ folder was found, try as best we can to return the default folder of type 'folde
 </li>
 </ul>
 </dd>
+<dt id="exchangelib.folders.ShadowItems"><code class="flex name class">
+<span>class <span class="ident">ShadowItems</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A mixin for non-wellknown folders than that are not deletable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShadowItems(NonDeletableFolder):
+    CONTAINER_CLASS = &#34;IPF.StoreItem.ShadowItems&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="exchangelib.folders.known_folders.NonDeletableFolder" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolder">NonDeletableFolder</a></li>
+<li><a title="exchangelib.folders.base.Folder" href="base.html#exchangelib.folders.base.Folder">Folder</a></li>
+<li><a title="exchangelib.folders.base.BaseFolder" href="base.html#exchangelib.folders.base.BaseFolder">BaseFolder</a></li>
+<li><a title="exchangelib.items.base.RegisterMixIn" href="../items/base.html#exchangelib.items.base.RegisterMixIn">RegisterMixIn</a></li>
+<li><a title="exchangelib.properties.IdChangeKeyMixIn" href="../properties.html#exchangelib.properties.IdChangeKeyMixIn">IdChangeKeyMixIn</a></li>
+<li><a title="exchangelib.properties.EWSElement" href="../properties.html#exchangelib.properties.EWSElement">EWSElement</a></li>
+<li><a title="exchangelib.queryset.SearchableMixIn" href="../queryset.html#exchangelib.queryset.SearchableMixIn">SearchableMixIn</a></li>
+<li><a title="exchangelib.version.SupportedVersionClassMixIn" href="../version.html#exchangelib.version.SupportedVersionClassMixIn">SupportedVersionClassMixIn</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="exchangelib.folders.ShadowItems.CONTAINER_CLASS"><code class="name">var <span class="ident">CONTAINER_CLASS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="exchangelib.folders.known_folders.NonDeletableFolder" href="known_folders.html#exchangelib.folders.known_folders.NonDeletableFolder">NonDeletableFolder</a></b></code>:
+<ul class="hlist">
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.ID_ELEMENT_CLS" href="base.html#exchangelib.folders.base.BaseFolder.ID_ELEMENT_CLS">ID_ELEMENT_CLS</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.account" href="base.html#exchangelib.folders.base.BaseFolder.account">account</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.add_field" href="../properties.html#exchangelib.properties.EWSElement.add_field">add_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.all" href="../queryset.html#exchangelib.queryset.SearchableMixIn.all">all</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.deregister" href="../items/base.html#exchangelib.items.base.RegisterMixIn.deregister">deregister</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.exclude" href="../queryset.html#exchangelib.queryset.SearchableMixIn.exclude">exclude</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.filter" href="../queryset.html#exchangelib.queryset.SearchableMixIn.filter">filter</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.folder_cls_from_container_class" href="base.html#exchangelib.folders.base.BaseFolder.folder_cls_from_container_class">folder_cls_from_container_class</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.folder_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.folder_sync_state">folder_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.get" href="../queryset.html#exchangelib.queryset.SearchableMixIn.get">get</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.get_distinguished" href="base.html#exchangelib.folders.base.Folder.get_distinguished">get_distinguished</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.get_events" href="base.html#exchangelib.folders.base.BaseFolder.get_events">get_events</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.get_streaming_events" href="base.html#exchangelib.folders.base.BaseFolder.get_streaming_events">get_streaming_events</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.item_sync_state" href="base.html#exchangelib.folders.base.BaseFolder.item_sync_state">item_sync_state</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.none" href="../queryset.html#exchangelib.queryset.SearchableMixIn.none">none</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.parent" href="base.html#exchangelib.folders.base.BaseFolder.parent">parent</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.people" href="../queryset.html#exchangelib.queryset.SearchableMixIn.people">people</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.register" href="../items/base.html#exchangelib.items.base.RegisterMixIn.register">register</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.remove_field" href="../properties.html#exchangelib.properties.EWSElement.remove_field">remove_field</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.root" href="base.html#exchangelib.folders.base.BaseFolder.root">root</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.subscribe_to_pull" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_pull">subscribe_to_pull</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.subscribe_to_push" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_push">subscribe_to_push</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.subscribe_to_streaming" href="base.html#exchangelib.folders.base.BaseFolder.subscribe_to_streaming">subscribe_to_streaming</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.supported_fields" href="../properties.html#exchangelib.properties.EWSElement.supported_fields">supported_fields</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.sync_hierarchy" href="base.html#exchangelib.folders.base.BaseFolder.sync_hierarchy">sync_hierarchy</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.sync_items" href="base.html#exchangelib.folders.base.BaseFolder.sync_items">sync_items</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.test_access" href="base.html#exchangelib.folders.base.BaseFolder.test_access">test_access</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.tree" href="base.html#exchangelib.folders.base.BaseFolder.tree">tree</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.unsubscribe" href="base.html#exchangelib.folders.base.BaseFolder.unsubscribe">unsubscribe</a></code></li>
+<li><code><a title="exchangelib.folders.known_folders.NonDeletableFolder.validate_field" href="../properties.html#exchangelib.properties.EWSElement.validate_field">validate_field</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="exchangelib.folders.SharePointNotifications"><code class="flex name class">
 <span>class <span class="ident">SharePointNotifications</span></span>
 <span>(</span><span>**kwargs)</span>
@@ -11977,7 +12102,8 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SharePointNotifications(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#34;sharepointnotifications&#34;</code></pre>
+    DISTINGUISHED_FOLDER_ID = &#34;sharepointnotifications&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -11993,6 +12119,10 @@ folder was found, try as best we can to return the default folder of type 'folde
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.folders.SharePointNotifications.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.SharePointNotifications.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -12971,7 +13101,8 @@ folder was found, try as best we can to return the default folder of type 'folde
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TemporarySaves(WellknownFolder):
-    DISTINGUISHED_FOLDER_ID = &#34;temporarysaves&#34;</code></pre>
+    DISTINGUISHED_FOLDER_ID = &#34;temporarysaves&#34;
+    supported_from = EXCHANGE_O365</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -12987,6 +13118,10 @@ folder was found, try as best we can to return the default folder of type 'folde
 <h3>Class variables</h3>
 <dl>
 <dt id="exchangelib.folders.TemporarySaves.DISTINGUISHED_FOLDER_ID"><code class="name">var <span class="ident">DISTINGUISHED_FOLDER_ID</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="exchangelib.folders.TemporarySaves.supported_from"><code class="name">var <span class="ident">supported_from</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -13377,7 +13512,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><a title="exchangelib.folders.known_folders.ArchiveRecoverableItemsRoot" href="known_folders.html#exchangelib.folders.known_folders.ArchiveRecoverableItemsRoot">ArchiveRecoverableItemsRoot</a></li>
 <li><a title="exchangelib.folders.known_folders.ArchiveRecoverableItemsVersions" href="known_folders.html#exchangelib.folders.known_folders.ArchiveRecoverableItemsVersions">ArchiveRecoverableItemsVersions</a></li>
 <li><a title="exchangelib.folders.known_folders.Calendar" href="known_folders.html#exchangelib.folders.known_folders.Calendar">Calendar</a></li>
-<li><a title="exchangelib.folders.known_folders.Companies" href="known_folders.html#exchangelib.folders.known_folders.Companies">Companies</a></li>
+<li><a title="exchangelib.folders.known_folders.CompanyContacts" href="known_folders.html#exchangelib.folders.known_folders.CompanyContacts">CompanyContacts</a></li>
 <li><a title="exchangelib.folders.known_folders.Conflicts" href="known_folders.html#exchangelib.folders.known_folders.Conflicts">Conflicts</a></li>
 <li><a title="exchangelib.folders.known_folders.Contacts" href="known_folders.html#exchangelib.folders.known_folders.Contacts">Contacts</a></li>
 <li><a title="exchangelib.folders.known_folders.ConversationHistory" href="known_folders.html#exchangelib.folders.known_folders.ConversationHistory">ConversationHistory</a></li>
@@ -13587,6 +13722,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <ul class="">
 <li><code><a title="exchangelib.folders.AllContacts.CONTAINER_CLASS" href="#exchangelib.folders.AllContacts.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.AllContacts.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.AllContacts.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.AllContacts.supported_from" href="#exchangelib.folders.AllContacts.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -13594,6 +13730,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <ul class="">
 <li><code><a title="exchangelib.folders.AllItems.CONTAINER_CLASS" href="#exchangelib.folders.AllItems.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.AllItems.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.AllItems.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.AllItems.supported_from" href="#exchangelib.folders.AllItems.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -13601,6 +13738,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <ul class="">
 <li><code><a title="exchangelib.folders.AllPersonMetadata.CONTAINER_CLASS" href="#exchangelib.folders.AllPersonMetadata.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.AllPersonMetadata.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.AllPersonMetadata.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.AllPersonMetadata.supported_from" href="#exchangelib.folders.AllPersonMetadata.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -13787,12 +13925,13 @@ folder was found, try as best we can to return the default folder of type 'folde
 </ul>
 </li>
 <li>
-<h4><code><a title="exchangelib.folders.Companies" href="#exchangelib.folders.Companies">Companies</a></code></h4>
+<h4><code><a title="exchangelib.folders.CompanyContacts" href="#exchangelib.folders.CompanyContacts">CompanyContacts</a></code></h4>
 <ul class="">
-<li><code><a title="exchangelib.folders.Companies.CONTAINER_CLASS" href="#exchangelib.folders.Companies.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
-<li><code><a title="exchangelib.folders.Companies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.Companies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
-<li><code><a title="exchangelib.folders.Companies.LOCALIZED_NAMES" href="#exchangelib.folders.Companies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
-<li><code><a title="exchangelib.folders.Companies.supported_item_models" href="#exchangelib.folders.Companies.supported_item_models">supported_item_models</a></code></li>
+<li><code><a title="exchangelib.folders.CompanyContacts.CONTAINER_CLASS" href="#exchangelib.folders.CompanyContacts.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
+<li><code><a title="exchangelib.folders.CompanyContacts.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.CompanyContacts.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.CompanyContacts.LOCALIZED_NAMES" href="#exchangelib.folders.CompanyContacts.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+<li><code><a title="exchangelib.folders.CompanyContacts.supported_from" href="#exchangelib.folders.CompanyContacts.supported_from">supported_from</a></code></li>
+<li><code><a title="exchangelib.folders.CompanyContacts.supported_item_models" href="#exchangelib.folders.CompanyContacts.supported_item_models">supported_item_models</a></code></li>
 </ul>
 </li>
 <li>
@@ -14004,6 +14143,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.FromFavoriteSenders.CONTAINER_CLASS" href="#exchangelib.folders.FromFavoriteSenders.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.FromFavoriteSenders.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.FromFavoriteSenders.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.FromFavoriteSenders.LOCALIZED_NAMES" href="#exchangelib.folders.FromFavoriteSenders.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+<li><code><a title="exchangelib.folders.FromFavoriteSenders.supported_from" href="#exchangelib.folders.FromFavoriteSenders.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -14041,6 +14181,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <h4><code><a title="exchangelib.folders.Inference" href="#exchangelib.folders.Inference">Inference</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.folders.Inference.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.Inference.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.Inference.supported_from" href="#exchangelib.folders.Inference.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -14162,6 +14303,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.CONTAINER_CLASS" href="#exchangelib.folders.PeopleCentricConversationBuddies.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.PeopleCentricConversationBuddies.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
 <li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES" href="#exchangelib.folders.PeopleCentricConversationBuddies.LOCALIZED_NAMES">LOCALIZED_NAMES</a></code></li>
+<li><code><a title="exchangelib.folders.PeopleCentricConversationBuddies.supported_from" href="#exchangelib.folders.PeopleCentricConversationBuddies.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -14298,6 +14440,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <ul class="">
 <li><code><a title="exchangelib.folders.RelevantContacts.CONTAINER_CLASS" href="#exchangelib.folders.RelevantContacts.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
 <li><code><a title="exchangelib.folders.RelevantContacts.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.RelevantContacts.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.RelevantContacts.supported_from" href="#exchangelib.folders.RelevantContacts.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -14357,9 +14500,16 @@ folder was found, try as best we can to return the default folder of type 'folde
 </ul>
 </li>
 <li>
+<h4><code><a title="exchangelib.folders.ShadowItems" href="#exchangelib.folders.ShadowItems">ShadowItems</a></code></h4>
+<ul class="">
+<li><code><a title="exchangelib.folders.ShadowItems.CONTAINER_CLASS" href="#exchangelib.folders.ShadowItems.CONTAINER_CLASS">CONTAINER_CLASS</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="exchangelib.folders.SharePointNotifications" href="#exchangelib.folders.SharePointNotifications">SharePointNotifications</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.folders.SharePointNotifications.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.SharePointNotifications.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.SharePointNotifications.supported_from" href="#exchangelib.folders.SharePointNotifications.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>
@@ -14448,6 +14598,7 @@ folder was found, try as best we can to return the default folder of type 'folde
 <h4><code><a title="exchangelib.folders.TemporarySaves" href="#exchangelib.folders.TemporarySaves">TemporarySaves</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.folders.TemporarySaves.DISTINGUISHED_FOLDER_ID" href="#exchangelib.folders.TemporarySaves.DISTINGUISHED_FOLDER_ID">DISTINGUISHED_FOLDER_ID</a></code></li>
+<li><code><a title="exchangelib.folders.TemporarySaves.supported_from" href="#exchangelib.folders.TemporarySaves.supported_from">supported_from</a></code></li>
 </ul>
 </li>
 <li>

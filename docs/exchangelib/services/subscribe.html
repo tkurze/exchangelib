@@ -82,8 +82,6 @@ class Subscribe(EWSAccountService, metaclass=abc.ABCMeta):
         event_types_elem = create_element(&#34;t:EventTypes&#34;)
         for event_type in event_types:
             add_xml_child(event_types_elem, &#34;t:EventType&#34;, event_type)
-        if not len(event_types_elem):
-            raise ValueError(&#34;&#39;event_types&#39; must not be empty&#34;)
         request_elem.append(event_types_elem)
         return request_elem
 
@@ -221,8 +219,6 @@ class SubscribeToStreaming(Subscribe):
         event_types_elem = create_element(&#34;t:EventTypes&#34;)
         for event_type in event_types:
             add_xml_child(event_types_elem, &#34;t:EventType&#34;, event_type)
-        if not len(event_types_elem):
-            raise ValueError(&#34;&#39;event_types&#39; must not be empty&#34;)
         request_elem.append(event_types_elem)
         return request_elem</code></pre>
 </details>

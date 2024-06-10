@@ -119,7 +119,7 @@ class FolderCollection(SearchableMixIn):
     def people(self):
         return QuerySet(self).people()
 
-    def view(self, start, end, max_items=None, *args, **kwargs):
+    def view(self, start, end, max_items=None):
         &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
         only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
@@ -137,7 +137,7 @@ class FolderCollection(SearchableMixIn):
         :param max_items:  (Default value = None)
         :return:
         &#34;&#34;&#34;
-        qs = QuerySet(self).filter(*args, **kwargs)
+        qs = QuerySet(self)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
         return qs
 
@@ -726,7 +726,7 @@ class StreamingSubscription(BaseSubscription):
     def people(self):
         return QuerySet(self).people()
 
-    def view(self, start, end, max_items=None, *args, **kwargs):
+    def view(self, start, end, max_items=None):
         &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
         only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
         CalendarItem occurrences as one would normally expect when presenting a calendar.
@@ -744,7 +744,7 @@ class StreamingSubscription(BaseSubscription):
         :param max_items:  (Default value = None)
         :return:
         &#34;&#34;&#34;
-        qs = QuerySet(self).filter(*args, **kwargs)
+        qs = QuerySet(self)
         qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
         return qs
 
@@ -1831,7 +1831,7 @@ sync methods.</p></div>
 </details>
 </dd>
 <dt id="exchangelib.folders.collections.FolderCollection.view"><code class="name flex">
-<span>def <span class="ident">view</span></span>(<span>self, start, end, max_items=None, *args, **kwargs)</span>
+<span>def <span class="ident">view</span></span>(<span>self, start, end, max_items=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Implement the CalendarView option to FindItem. The difference between 'filter' and 'view' is that 'filter'
@@ -1851,7 +1851,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def view(self, start, end, max_items=None, *args, **kwargs):
+<pre><code class="python">def view(self, start, end, max_items=None):
     &#34;&#34;&#34;Implement the CalendarView option to FindItem. The difference between &#39;filter&#39; and &#39;view&#39; is that &#39;filter&#39;
     only returns the master CalendarItem for recurring items, while &#39;view&#39; unfolds recurring items and returns all
     CalendarItem occurrences as one would normally expect when presenting a calendar.
@@ -1869,7 +1869,7 @@ the overlap the timespan are returned (items that end exactly on 'start' are als
     :param max_items:  (Default value = None)
     :return:
     &#34;&#34;&#34;
-    qs = QuerySet(self).filter(*args, **kwargs)
+    qs = QuerySet(self)
     qs.calendar_view = CalendarView(start=start, end=end, max_items=max_items)
     return qs</code></pre>
 </details>

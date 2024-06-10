@@ -81,14 +81,10 @@ class GetUserSettings(EWSService):
             mailbox = create_element(&#34;a:Mailbox&#34;)
             set_xml_value(mailbox, user)
             add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
-        if not len(users_elem):
-            raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
         request.append(users_elem)
         requested_settings = create_element(&#34;a:RequestedSettings&#34;)
         for setting in settings:
             add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
-        if not len(requested_settings):
-            raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
         request.append(requested_settings)
         payload.append(request)
         return payload
@@ -183,14 +179,10 @@ class GetUserSettings(EWSService):
             mailbox = create_element(&#34;a:Mailbox&#34;)
             set_xml_value(mailbox, user)
             add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
-        if not len(users_elem):
-            raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
         request.append(users_elem)
         requested_settings = create_element(&#34;a:RequestedSettings&#34;)
         for setting in settings:
             add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
-        if not len(requested_settings):
-            raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
         request.append(requested_settings)
         payload.append(request)
         return payload
@@ -276,14 +268,10 @@ class GetUserSettings(EWSService):
         mailbox = create_element(&#34;a:Mailbox&#34;)
         set_xml_value(mailbox, user)
         add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
-    if not len(users_elem):
-        raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
     request.append(users_elem)
     requested_settings = create_element(&#34;a:RequestedSettings&#34;)
     for setting in settings:
         add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
-    if not len(requested_settings):
-        raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
     request.append(requested_settings)
     payload.append(request)
     return payload</code></pre>

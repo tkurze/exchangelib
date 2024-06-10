@@ -321,7 +321,6 @@ class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
         is_searchable=True,
         is_attribute=False,
         default=None,
-        *args,
         **kwargs,
     ):
         self.name = name  # Usually set by the EWSMeta metaclass
@@ -338,7 +337,7 @@ class Field(SupportedVersionInstanceMixIn, metaclass=abc.ABCMeta):
         self.is_searchable = is_searchable
         # When true, this field is treated as an XML attribute instead of an element
         self.is_attribute = is_attribute
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
@@ -3696,7 +3695,7 @@ def value_cls(self):
 </dd>
 <dt id="exchangelib.fields.EmailSubField"><code class="flex name class">
 <span>class <span class="ident">EmailSubField</span></span>
-<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, *args, **kwargs)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A field to hold the value on an SingleFieldIndexedElement.</p></div>
@@ -4126,7 +4125,7 @@ stored internally as integers but output in XML as strings.</p></div>
 </dd>
 <dt id="exchangelib.fields.Field"><code class="flex name class">
 <span>class <span class="ident">Field</span></span>
-<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, *args, **kwargs)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Holds information related to an item field.</p></div>
@@ -4157,7 +4156,6 @@ stored internally as integers but output in XML as strings.</p></div>
         is_searchable=True,
         is_attribute=False,
         default=None,
-        *args,
         **kwargs,
     ):
         self.name = name  # Usually set by the EWSMeta metaclass
@@ -4174,7 +4172,7 @@ stored internally as integers but output in XML as strings.</p></div>
         self.is_searchable = is_searchable
         # When true, this field is treated as an XML attribute instead of an element
         self.is_attribute = is_attribute
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def clean(self, value, version=None):
         if version and not self.supports_version(version):
@@ -6562,7 +6560,7 @@ because the decoded data could be in some other encoding, specified in the "Cont
 </dd>
 <dt id="exchangelib.fields.SubField"><code class="flex name class">
 <span>class <span class="ident">SubField</span></span>
-<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, *args, **kwargs)</span>
+<span>(</span><span>name=None, is_required=False, is_required_after_save=False, is_read_only=False, is_read_only_after_send=False, is_searchable=True, is_attribute=False, default=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A field to hold the value on an IndexedElement.</p></div>

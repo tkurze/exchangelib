@@ -76,11 +76,11 @@ class GetStreamingEvents(EWSAccountService):
         return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
+    def _get_soap_parts(cls, response):
         # Pass the response unaltered. We want to use our custom document yielder
         return None, response
 
-    def _get_soap_messages(self, body, **parse_opts):
+    def _get_soap_messages(self, body):
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;. We want to continuously read the content,
         # looking for complete XML documents. When we have a full document, we want to parse it as if it was a normal
         # XML response.
@@ -89,13 +89,13 @@ class GetStreamingEvents(EWSAccountService):
             xml_log.debug(&#34;Response XML (docs counter: %(i)s): %(xml_response)s&#34;, dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
-                _, body = super()._get_soap_parts(response=response, **parse_opts)
+                _, body = super()._get_soap_parts(response=response)
             except Exception:
                 r.close()  # Release memory
                 raise
             # TODO: We&#39;re skipping ._update_api_version() here because we don&#39;t have access to the &#39;api_version&#39; used.
             # TODO: We should be doing a lot of error handling for ._get_soap_messages().
-            yield from super()._get_soap_messages(body=body, **parse_opts)
+            yield from super()._get_soap_messages(body=body)
             if self.connection_status == self.CLOSED:
                 # Don&#39;t wait for the TCP connection to timeout
                 break
@@ -125,9 +125,6 @@ class GetStreamingEvents(EWSAccountService):
         subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
-        if not len(subscriptions_elem):
-            raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
-
         payload.append(subscriptions_elem)
         add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
         return payload</code></pre>
@@ -192,11 +189,11 @@ class GetStreamingEvents(EWSAccountService):
         return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
+    def _get_soap_parts(cls, response):
         # Pass the response unaltered. We want to use our custom document yielder
         return None, response
 
-    def _get_soap_messages(self, body, **parse_opts):
+    def _get_soap_messages(self, body):
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;. We want to continuously read the content,
         # looking for complete XML documents. When we have a full document, we want to parse it as if it was a normal
         # XML response.
@@ -205,13 +202,13 @@ class GetStreamingEvents(EWSAccountService):
             xml_log.debug(&#34;Response XML (docs counter: %(i)s): %(xml_response)s&#34;, dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
-                _, body = super()._get_soap_parts(response=response, **parse_opts)
+                _, body = super()._get_soap_parts(response=response)
             except Exception:
                 r.close()  # Release memory
                 raise
             # TODO: We&#39;re skipping ._update_api_version() here because we don&#39;t have access to the &#39;api_version&#39; used.
             # TODO: We should be doing a lot of error handling for ._get_soap_messages().
-            yield from super()._get_soap_messages(body=body, **parse_opts)
+            yield from super()._get_soap_messages(body=body)
             if self.connection_status == self.CLOSED:
                 # Don&#39;t wait for the TCP connection to timeout
                 break
@@ -241,9 +238,6 @@ class GetStreamingEvents(EWSAccountService):
         subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
-        if not len(subscriptions_elem):
-            raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
-
         payload.append(subscriptions_elem)
         add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
         return payload</code></pre>
@@ -319,9 +313,6 @@ class GetStreamingEvents(EWSAccountService):
     subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
     for subscription_id in subscription_ids:
         add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
-    if not len(subscriptions_elem):
-        raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
-
     payload.append(subscriptions_elem)
     add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
     return payload</code></pre>

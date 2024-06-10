@@ -275,7 +275,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         from .known_folders import (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -298,7 +298,7 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         for folder_cls in (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -1190,7 +1190,7 @@ class Folder(BaseFolder):
         from .known_folders import (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -1213,7 +1213,7 @@ class Folder(BaseFolder):
         for folder_cls in (
             ApplicationData,
             Calendar,
-            Companies,
+            CompanyContacts,
             Contacts,
             ConversationSettings,
             CrawlerData,
@@ -1872,7 +1872,7 @@ def folder_cls_from_container_class(container_class):
     from .known_folders import (
         ApplicationData,
         Calendar,
-        Companies,
+        CompanyContacts,
         Contacts,
         ConversationSettings,
         CrawlerData,
@@ -1895,7 +1895,7 @@ def folder_cls_from_container_class(container_class):
     for folder_cls in (
         ApplicationData,
         Calendar,
-        Companies,
+        CompanyContacts,
         Contacts,
         ConversationSettings,
         CrawlerData,

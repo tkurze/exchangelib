@@ -2046,7 +2046,7 @@ class UserResponse(EWSElement):
         &#34;external_mailbox_server&#34;: &#34;ExternalMailboxServer&#34;,
         &#34;external_mailbox_server_requires_ssl&#34;: &#34;ExternalMailboxServerRequiresSSL&#34;,
         &#34;external_mailbox_server_authentication_methods&#34;: &#34;ExternalMailboxServerAuthenticationMethods&#34;,
-        &#34;ecp_voicemail_url_fragment,&#34;: &#34;EcpVoicemailUrlFragment,&#34;,
+        &#34;ecp_voicemail_url_fragment,&#34;: &#34;EcpVoicemailUrlFragment&#34;,
         &#34;ecp_email_subscriptions_url_fragment&#34;: &#34;EcpEmailSubscriptionsUrlFragment&#34;,
         &#34;ecp_text_messaging_url_fragment&#34;: &#34;EcpTextMessagingUrlFragment&#34;,
         &#34;ecp_delivery_report_url_fragment&#34;: &#34;EcpDeliveryReportUrlFragment&#34;,
@@ -2119,15 +2119,21 @@ class UserResponse(EWSElement):
         if self.error_code == &#34;InvalidUser&#34;:
             raise ErrorNonExistentMailbox(self.error_message)
         if self.error_code in (
+            &#34;InvalidDomain&#34;,
             &#34;InvalidRequest&#34;,
             &#34;InvalidSetting&#34;,
-            &#34;SettingIsNotAvailable&#34;,
-            &#34;InvalidDomain&#34;,
             &#34;NotFederated&#34;,
+            &#34;SettingIsNotAvailable&#34;,
         ):
             raise AutoDiscoverFailed(f&#34;{self.error_code}: {self.error_message}&#34;)
-        if self.user_settings_errors:
-            raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)
+        errors_to_report = {}
+        for field_name, (error, message) in (self.user_settings_errors or {}).items():
+            if error in (&#34;InvalidSetting&#34;, &#34;SettingIsNotAvailable&#34;) and field_name in self.SETTINGS_MAP:
+                # Setting is not available for this user or is unknown to this server. Harmless.
+                continue
+            errors_to_report[field_name] = (error, message)
+        if errors_to_report:
+            raise AutoDiscoverFailed(f&#34;User settings errors: {errors_to_report}&#34;)
 
     @classmethod
     def parse_elem(cls, elem):
@@ -11627,7 +11633,7 @@ def from_xml(cls, elem, account):
         &#34;external_mailbox_server&#34;: &#34;ExternalMailboxServer&#34;,
         &#34;external_mailbox_server_requires_ssl&#34;: &#34;ExternalMailboxServerRequiresSSL&#34;,
         &#34;external_mailbox_server_authentication_methods&#34;: &#34;ExternalMailboxServerAuthenticationMethods&#34;,
-        &#34;ecp_voicemail_url_fragment,&#34;: &#34;EcpVoicemailUrlFragment,&#34;,
+        &#34;ecp_voicemail_url_fragment,&#34;: &#34;EcpVoicemailUrlFragment&#34;,
         &#34;ecp_email_subscriptions_url_fragment&#34;: &#34;EcpEmailSubscriptionsUrlFragment&#34;,
         &#34;ecp_text_messaging_url_fragment&#34;: &#34;EcpTextMessagingUrlFragment&#34;,
         &#34;ecp_delivery_report_url_fragment&#34;: &#34;EcpDeliveryReportUrlFragment&#34;,
@@ -11700,15 +11706,21 @@ def from_xml(cls, elem, account):
         if self.error_code == &#34;InvalidUser&#34;:
             raise ErrorNonExistentMailbox(self.error_message)
         if self.error_code in (
+            &#34;InvalidDomain&#34;,
             &#34;InvalidRequest&#34;,
             &#34;InvalidSetting&#34;,
-            &#34;SettingIsNotAvailable&#34;,
-            &#34;InvalidDomain&#34;,
             &#34;NotFederated&#34;,
+            &#34;SettingIsNotAvailable&#34;,
         ):
             raise AutoDiscoverFailed(f&#34;{self.error_code}: {self.error_message}&#34;)
-        if self.user_settings_errors:
-            raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)
+        errors_to_report = {}
+        for field_name, (error, message) in (self.user_settings_errors or {}).items():
+            if error in (&#34;InvalidSetting&#34;, &#34;SettingIsNotAvailable&#34;) and field_name in self.SETTINGS_MAP:
+                # Setting is not available for this user or is unknown to this server. Harmless.
+                continue
+            errors_to_report[field_name] = (error, message)
+        if errors_to_report:
+            raise AutoDiscoverFailed(f&#34;User settings errors: {errors_to_report}&#34;)
 
     @classmethod
     def parse_elem(cls, elem):
@@ -11936,15 +11948,21 @@ def version(self):
     if self.error_code == &#34;InvalidUser&#34;:
         raise ErrorNonExistentMailbox(self.error_message)
     if self.error_code in (
+        &#34;InvalidDomain&#34;,
         &#34;InvalidRequest&#34;,
         &#34;InvalidSetting&#34;,
-        &#34;SettingIsNotAvailable&#34;,
-        &#34;InvalidDomain&#34;,
         &#34;NotFederated&#34;,
+        &#34;SettingIsNotAvailable&#34;,
     ):
         raise AutoDiscoverFailed(f&#34;{self.error_code}: {self.error_message}&#34;)
-    if self.user_settings_errors:
-        raise AutoDiscoverFailed(f&#34;User settings errors: {self.user_settings_errors}&#34;)</code></pre>
+    errors_to_report = {}
+    for field_name, (error, message) in (self.user_settings_errors or {}).items():
+        if error in (&#34;InvalidSetting&#34;, &#34;SettingIsNotAvailable&#34;) and field_name in self.SETTINGS_MAP:
+            # Setting is not available for this user or is unknown to this server. Harmless.
+            continue
+        errors_to_report[field_name] = (error, message)
+    if errors_to_report:
+        raise AutoDiscoverFailed(f&#34;User settings errors: {errors_to_report}&#34;)</code></pre>
 </details>
 </dd>
 </dl>

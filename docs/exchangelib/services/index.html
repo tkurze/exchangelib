@@ -1874,6 +1874,7 @@ invitation accepts (see
             yield self._elem_to_obj(elem)
 
     def _elem_to_obj(self, elem):
+        &#34;&#34;&#34;Convert a single XML element to a single Python object&#34;&#34;&#34;
         if not self.returns_elements:
             raise RuntimeError(&#34;Incorrect call to method when &#39;returns_elements&#39; is False&#34;)
         raise NotImplementedError()
@@ -1988,7 +1989,7 @@ invitation accepts (see
                     self.stop_streaming()
 
     def _handle_response_cookies(self, session):
-        pass
+        &#34;&#34;&#34;Code to react on response cookies&#34;&#34;&#34;
 
     def _get_response(self, payload, api_version):
         &#34;&#34;&#34;Send the actual HTTP request and get the response.&#34;&#34;&#34;
@@ -2028,13 +2029,13 @@ invitation accepts (see
             v for v in self.supported_api_versions() if v != self._version_hint.api_version
         )
 
-    def _get_response_xml(self, payload, **parse_opts):
+    def _get_response_xml(self, payload):
         &#34;&#34;&#34;Send the payload to the server and return relevant elements from the result. Several things happen here:
-          * The payload is wrapped in SOAP headers and sent to the server
-          * The Exchange API version is negotiated and stored in the protocol object
-          * Connection errors are handled and possibly reraised as ErrorServerBusy
-          * SOAP errors are raised
-          * EWS errors are raised, or passed on to the caller
+          * Wraps the payload is wrapped in SOAP headers and sends to the server
+          * Negotiates the Exchange API version and stores it in the protocol object
+          * Handles connection errors and possibly re-raises them as ErrorServerBusy
+          * Raises SOAP errors
+          * Raises EWS errors or passes them on to the caller
 
         :param payload: The request payload, as an XML object
         :return: A generator of XML objects or None if the service does not return a result
@@ -2050,15 +2051,15 @@ invitation accepts (see
                 # Let &#39;requests&#39; decode raw data automatically
                 r.raw.decode_content = True
             try:
-                header, body = self._get_soap_parts(response=r, **parse_opts)
+                header, body = self._get_soap_parts(response=r)
             except Exception:
                 r.close()  # Release memory
                 raise
             # The body may contain error messages from Exchange, but we still want to collect version info
             if header is not None:
-                self._update_api_version(api_version=api_version, header=header, **parse_opts)
+                self._update_api_version(api_version=api_version, header=header)
             try:
-                return self._get_soap_messages(body=body, **parse_opts)
+                return self._get_soap_messages(body=body)
             except (
                 ErrorInvalidServerVersion,
                 ErrorIncorrectSchemaVersion,
@@ -2091,7 +2092,7 @@ invitation accepts (see
         self.protocol.retry_policy.back_off(e.back_off)
         # We&#39;ll warn about this later if we actually need to sleep
 
-    def _update_api_version(self, api_version, header, **parse_opts):
+    def _update_api_version(self, api_version, header):
         &#34;&#34;&#34;Parse the server version contained in SOAP headers and update the version hint stored by the caller, if
         necessary.
         &#34;&#34;&#34;
@@ -2124,7 +2125,7 @@ invitation accepts (see
         return f&#34;{{{MNS}}}{cls.SERVICE_NAME}ResponseMessage&#34;
 
     @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
+    def _get_soap_parts(cls, response):
         &#34;&#34;&#34;Split the SOAP response into its headers and body elements.&#34;&#34;&#34;
         try:
             root = to_xml(response.iter_content())
@@ -2139,7 +2140,7 @@ invitation accepts (see
             raise MalformedResponseError(&#34;No Body element in SOAP response&#34;)
         return header, body
 
-    def _get_soap_messages(self, body, **parse_opts):
+    def _get_soap_messages(self, body):
         &#34;&#34;&#34;Return the elements in the response containing the response messages. Raises any SOAP exceptions.&#34;&#34;&#34;
         response = body.find(self._response_tag())
         if response is None:
@@ -3630,23 +3631,20 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
         payload.append(attachment_ids_element(items=items, version=self.account.version))
         return payload
 
-    def _update_api_version(self, api_version, header, **parse_opts):
-        if not parse_opts.get(&#34;stream_file_content&#34;, False):
-            super()._update_api_version(api_version, header, **parse_opts)
+    def _update_api_version(self, api_version, header):
+        if not self.streaming:
+            super()._update_api_version(api_version, header)
         # TODO: We&#39;re skipping this part in streaming mode because StreamingBase64Parser cannot parse the SOAP header
 
-    @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
-        if not parse_opts.get(&#34;stream_file_content&#34;, False):
-            return super()._get_soap_parts(response, **parse_opts)
-
+    def _get_soap_parts(self, response):
+        if not self.streaming:
+            return super()._get_soap_parts(response)
         # Pass the response unaltered. We want to use our custom streaming parser
         return None, response
 
-    def _get_soap_messages(self, body, **parse_opts):
-        if not parse_opts.get(&#34;stream_file_content&#34;, False):
-            return super()._get_soap_messages(body, **parse_opts)
-
+    def _get_soap_messages(self, body):
+        if not self.streaming:
+            return super()._get_soap_messages(body)
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;
         r = body
         parser = StreamingBase64Parser()
@@ -3666,13 +3664,14 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
         )
         self.streaming = True
         try:
-            yield from self._get_response_xml(payload=payload, stream_file_content=True)
+            yield from self._get_response_xml(payload=payload)
         except ElementNotFound as enf:
             # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
             # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
             # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
             response = DummyResponse(content=enf.data)
             _, body = super()._get_soap_parts(response=response)
+            # TODO: We&#39;re skipping ._update_api_version() here because we don&#39;t have access to the &#39;api_version&#39; used.
             res = super()._get_soap_messages(body=body)
             for e in self._get_elements_in_response(response=res):
                 if isinstance(e, Exception):
@@ -3783,13 +3782,14 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
     )
     self.streaming = True
     try:
-        yield from self._get_response_xml(payload=payload, stream_file_content=True)
+        yield from self._get_response_xml(payload=payload)
     except ElementNotFound as enf:
         # When the returned XML does not contain a Content element, ElementNotFound is thrown by parser.parse().
         # Let the non-streaming SOAP parser parse the response and hook into the normal exception handling.
         # Wrap in DummyResponse because _get_soap_parts() expects an iter_content() method.
         response = DummyResponse(content=enf.data)
         _, body = super()._get_soap_parts(response=response)
+        # TODO: We&#39;re skipping ._update_api_version() here because we don&#39;t have access to the &#39;api_version&#39; used.
         res = super()._get_soap_messages(body=body)
         for e in self._get_elements_in_response(response=res):
             if isinstance(e, Exception):
@@ -5169,11 +5169,11 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
         return Notification.from_xml(elem=elem, account=None)
 
     @classmethod
-    def _get_soap_parts(cls, response, **parse_opts):
+    def _get_soap_parts(cls, response):
         # Pass the response unaltered. We want to use our custom document yielder
         return None, response
 
-    def _get_soap_messages(self, body, **parse_opts):
+    def _get_soap_messages(self, body):
         # &#39;body&#39; is actually the raw response passed on by &#39;_get_soap_parts&#39;. We want to continuously read the content,
         # looking for complete XML documents. When we have a full document, we want to parse it as if it was a normal
         # XML response.
@@ -5182,13 +5182,13 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
             xml_log.debug(&#34;Response XML (docs counter: %(i)s): %(xml_response)s&#34;, dict(i=i, xml_response=doc))
             response = DummyResponse(content=doc)
             try:
-                _, body = super()._get_soap_parts(response=response, **parse_opts)
+                _, body = super()._get_soap_parts(response=response)
             except Exception:
                 r.close()  # Release memory
                 raise
             # TODO: We&#39;re skipping ._update_api_version() here because we don&#39;t have access to the &#39;api_version&#39; used.
             # TODO: We should be doing a lot of error handling for ._get_soap_messages().
-            yield from super()._get_soap_messages(body=body, **parse_opts)
+            yield from super()._get_soap_messages(body=body)
             if self.connection_status == self.CLOSED:
                 # Don&#39;t wait for the TCP connection to timeout
                 break
@@ -5218,9 +5218,6 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
         subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
         for subscription_id in subscription_ids:
             add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
-        if not len(subscriptions_elem):
-            raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
-
         payload.append(subscriptions_elem)
         add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
         return payload</code></pre>
@@ -5296,9 +5293,6 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
     subscriptions_elem = create_element(&#34;m:SubscriptionIds&#34;)
     for subscription_id in subscription_ids:
         add_xml_child(subscriptions_elem, &#34;t:SubscriptionId&#34;, subscription_id)
-    if not len(subscriptions_elem):
-        raise ValueError(&#34;&#39;subscription_ids&#39; must not be empty&#34;)
-
     payload.append(subscriptions_elem)
     add_xml_child(payload, &#34;m:ConnectionTimeout&#34;, connection_timeout)
     return payload</code></pre>
@@ -5725,14 +5719,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
             mailbox = create_element(&#34;a:Mailbox&#34;)
             set_xml_value(mailbox, user)
             add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
-        if not len(users_elem):
-            raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
         request.append(users_elem)
         requested_settings = create_element(&#34;a:RequestedSettings&#34;)
         for setting in settings:
             add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
-        if not len(requested_settings):
-            raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
         request.append(requested_settings)
         payload.append(request)
         return payload
@@ -5818,14 +5808,10 @@ MSDN: <a href="https://docs.microsoft.com/en-us/exchange/client-developer/web-se
         mailbox = create_element(&#34;a:Mailbox&#34;)
         set_xml_value(mailbox, user)
         add_xml_child(users_elem, &#34;a:User&#34;, mailbox)
-    if not len(users_elem):
-        raise ValueError(&#34;&#39;users&#39; must not be empty&#34;)
     request.append(users_elem)
     requested_settings = create_element(&#34;a:RequestedSettings&#34;)
     for setting in settings:
         add_xml_child(requested_settings, &#34;a:Setting&#34;, UserResponse.SETTINGS_MAP[setting])
-    if not len(requested_settings):
-        raise ValueError(&#34;&#39;requested_settings&#39; must not be empty&#34;)
     request.append(requested_settings)
     payload.append(request)
     return payload</code></pre>
