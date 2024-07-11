@@ -511,6 +511,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
         return GetUserAvailability(self).call(
+            tzinfo=start.tzinfo,
             mailbox_data=[
                 MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,

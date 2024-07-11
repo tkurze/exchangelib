@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from ..properties import FreeBusyView
 from ..util import MNS, create_element, set_xml_value
 from .common import EWSService
@@ -11,9 +13,14 @@ class GetUserAvailability(EWSService):
 
     SERVICE_NAME = "GetUserAvailability"
 
-    def call(self, mailbox_data, timezone, free_busy_view_options):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tzinfo = None
+
+    def call(self, tzinfo, mailbox_data, timezone, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
         #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+        self.tzinfo = tzinfo
         return self._elems_to_objs(
             self._chunked_get_elements(
                 self.get_payload,
@@ -23,8 +30,13 @@ class GetUserAvailability(EWSService):
             )
         )
 
+    @property
+    def _timezone(self):
+        return self.tzinfo
+
     def _elem_to_obj(self, elem):
-        return FreeBusyView.from_xml(elem=elem, account=None)
+        fake_account = namedtuple("Account", ["default_timezone"])(default_timezone=self.tzinfo)
+        return FreeBusyView.from_xml(elem=elem, account=fake_account)
 
     def get_payload(self, mailbox_data, timezone, free_busy_view_options):
         payload = create_element(f"m:{self.SERVICE_NAME}Request")
