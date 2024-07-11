@@ -638,6 +638,12 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
         # We're overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
 
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        # pylint: disable=unused-argument
+        # Required for requests >= 2.32.3
+        # See: https://github.com/psf/requests/pull/6710
+        return super().get_connection_with_tls_context(request=request, verify=False, proxies=proxies, cert=cert)
+
 
 class TLSClientAuth(requests.adapters.HTTPAdapter):
     """An HTTP adapter that implements Certificate Based Authentication (CBA)."""
