@@ -61,7 +61,6 @@ jobs:
       if: matrix.python-version == '3.13-dev'
       run: |
         sudo apt-get install libxml2-dev libxslt1-dev
-        python -m pip install hg+https://foss.heptapod.net/pypy/cffi
         python -m pip install git+https://github.com/cython/cython.git
         python -m pip install git+https://github.com/lxml/lxml.git
         python -m pip install git+https://github.com/yaml/pyyaml.git
