@@ -542,6 +542,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
         return GetUserAvailability(self).call(
+            tzinfo=start.tzinfo,
             mailbox_data=[
                 MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
@@ -668,6 +669,12 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
         # pylint: disable=unused-argument
         # We&#39;re overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        # pylint: disable=unused-argument
+        # Required for requests &gt;= 2.32.3
+        # See: https://github.com/psf/requests/pull/6710
+        return super().get_connection_with_tls_context(request=request, verify=False, proxies=proxies, cert=cert)
 
 
 class TLSClientAuth(requests.adapters.HTTPAdapter):
@@ -2004,7 +2011,13 @@ def back_off_until(self):
     def cert_verify(self, conn, url, verify, cert):
         # pylint: disable=unused-argument
         # We&#39;re overriding a method, so we have to keep the signature
-        super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
+        super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        # pylint: disable=unused-argument
+        # Required for requests &gt;= 2.32.3
+        # See: https://github.com/psf/requests/pull/6710
+        return super().get_connection_with_tls_context(request=request, verify=False, proxies=proxies, cert=cert)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2034,6 +2047,22 @@ to a CA bundle to use
     # pylint: disable=unused-argument
     # We&#39;re overriding a method, so we have to keep the signature
     super().cert_verify(conn=conn, url=url, verify=False, cert=cert)</code></pre>
+</details>
+</dd>
+<dt id="exchangelib.protocol.NoVerifyHTTPAdapter.get_connection_with_tls_context"><code class="name flex">
+<span>def <span class="ident">get_connection_with_tls_context</span></span>(<span>self, request, verify, proxies=None, cert=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+    # pylint: disable=unused-argument
+    # Required for requests &gt;= 2.32.3
+    # See: https://github.com/psf/requests/pull/6710
+    return super().get_connection_with_tls_context(request=request, verify=False, proxies=proxies, cert=cert)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2107,6 +2136,7 @@ services that are not tied to an account.</p></div>
 
         tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
         return GetUserAvailability(self).call(
+            tzinfo=start.tzinfo,
             mailbox_data=[
                 MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
@@ -2356,6 +2386,7 @@ FreeBusyViewOptions.requested_view choices. (Default value = 'DetailedMerged')</
 
     tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
     return GetUserAvailability(self).call(
+        tzinfo=start.tzinfo,
         mailbox_data=[
             MailboxData(
                 email=account.primary_smtp_address if isinstance(account, Account) else account,
@@ -2858,6 +2889,7 @@ exposed for use when subclassing the
 <h4><code><a title="exchangelib.protocol.NoVerifyHTTPAdapter" href="#exchangelib.protocol.NoVerifyHTTPAdapter">NoVerifyHTTPAdapter</a></code></h4>
 <ul class="">
 <li><code><a title="exchangelib.protocol.NoVerifyHTTPAdapter.cert_verify" href="#exchangelib.protocol.NoVerifyHTTPAdapter.cert_verify">cert_verify</a></code></li>
+<li><code><a title="exchangelib.protocol.NoVerifyHTTPAdapter.get_connection_with_tls_context" href="#exchangelib.protocol.NoVerifyHTTPAdapter.get_connection_with_tls_context">get_connection_with_tls_context</a></code></li>
 </ul>
 </li>
 <li>
