@@ -36,7 +36,7 @@ from .settings import OofSettings
 from .transport import BASIC, CBA, DIGEST, GSSAPI, NTLM, OAUTH2, SSPI
 from .version import Build, Version
 
-__version__ = "5.4.1"
+__version__ = "5.4.2"
 
 __all__ = [
     "AcceptItem",

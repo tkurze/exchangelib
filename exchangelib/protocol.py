@@ -511,6 +511,7 @@ class Protocol(BaseProtocol, metaclass=CachingProtocol):
 
         tz_definition = list(self.get_timezones(timezones=[start.tzinfo], return_full_timezone_data=True))[0]
         return GetUserAvailability(self).call(
+            tzinfo=start.tzinfo,
             mailbox_data=[
                 MailboxData(
                     email=account.primary_smtp_address if isinstance(account, Account) else account,
@@ -637,6 +638,12 @@ class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
         # pylint: disable=unused-argument
         # We're overriding a method, so we have to keep the signature
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        # pylint: disable=unused-argument
+        # Required for requests >= 2.32.3
+        # See: https://github.com/psf/requests/pull/6710
+        return super().get_connection_with_tls_context(request=request, verify=False, proxies=proxies, cert=cert)
 
 
 class TLSClientAuth(requests.adapters.HTTPAdapter):

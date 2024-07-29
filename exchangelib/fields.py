@@ -598,9 +598,10 @@ class DateTimeBackedDateField(DateField):
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
         self._default_time = kwargs.pop("default_time", datetime.time(0, 0))
-        super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
+        kwargs.pop("allow_naive", None)
+        super().__init__(*args, **kwargs)
 
     def date_to_datetime(self, value):
         return self._datetime_field.value_cls.combine(value, self._default_time).replace(tzinfo=UTC)
@@ -665,6 +666,10 @@ class DateTimeField(FieldURIField):
 
     value_cls = EWSDateTime
 
+    def __init__(self, *args, **kwargs):
+        self.allow_naive = kwargs.pop("allow_naive", False)
+        super().__init__(*args, **kwargs)
+
     def clean(self, value, version=None):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
@@ -686,8 +691,10 @@ class DateTimeField(FieldURIField):
                         tz = account.default_timezone
                         log.info("Found naive datetime %s on field %s. Assuming timezone %s", e.local_dt, self.name, tz)
                         return e.local_dt.replace(tzinfo=tz)
-                    # There's nothing we can do but return the naive date. It's better than assuming e.g. UTC.
-                    log.warning("Returning naive datetime %s on field %s", e.local_dt, self.name)
+                    if not self.allow_naive:
+                        # There's nothing we can do but return the naive date. It's better than assuming e.g. UTC.
+                        # Making this a hard error is probably too risky. Warn instead.
+                        log.warning("Returning naive datetime %s on field %s", e.local_dt, self.name)
                     return e.local_dt
                 log.info("Cannot convert value '%s' on field '%s' to type %s", val, self.name, self.value_cls)
                 return None

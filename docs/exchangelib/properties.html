@@ -1885,7 +1885,8 @@ class AbsoluteDateTransition(BaseTransition):
 
     ELEMENT_NAME = &#34;AbsoluteDateTransition&#34;
 
-    date = DateTimeBackedDateField(field_uri=&#34;DateTime&#34;)
+    # Values are returned as naive, and we have no timezone to hook up the values to yet
+    date = DateTimeBackedDateField(field_uri=&#34;DateTime&#34;, allow_naive=True)
 
 
 class RecurringDayTransition(BaseTransition):
@@ -2415,7 +2416,8 @@ class Operations(EWSElement):
 
     ELEMENT_NAME = &#34;AbsoluteDateTransition&#34;
 
-    date = DateTimeBackedDateField(field_uri=&#34;DateTime&#34;)</code></pre>
+    # Values are returned as naive, and we have no timezone to hook up the values to yet
+    date = DateTimeBackedDateField(field_uri=&#34;DateTime&#34;, allow_naive=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

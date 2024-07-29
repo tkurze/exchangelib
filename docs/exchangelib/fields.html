@@ -626,9 +626,10 @@ class DateTimeBackedDateField(DateField):
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
         self._default_time = kwargs.pop(&#34;default_time&#34;, datetime.time(0, 0))
-        super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
+        kwargs.pop(&#34;allow_naive&#34;, None)
+        super().__init__(*args, **kwargs)
 
     def date_to_datetime(self, value):
         return self._datetime_field.value_cls.combine(value, self._default_time).replace(tzinfo=UTC)
@@ -693,6 +694,10 @@ class DateTimeField(FieldURIField):
 
     value_cls = EWSDateTime
 
+    def __init__(self, *args, **kwargs):
+        self.allow_naive = kwargs.pop(&#34;allow_naive&#34;, False)
+        super().__init__(*args, **kwargs)
+
     def clean(self, value, version=None):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
@@ -714,8 +719,10 @@ class DateTimeField(FieldURIField):
                         tz = account.default_timezone
                         log.info(&#34;Found naive datetime %s on field %s. Assuming timezone %s&#34;, e.local_dt, self.name, tz)
                         return e.local_dt.replace(tzinfo=tz)
-                    # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                    log.warning(&#34;Returning naive datetime %s on field %s&#34;, e.local_dt, self.name)
+                    if not self.allow_naive:
+                        # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
+                        # Making this a hard error is probably too risky. Warn instead.
+                        log.warning(&#34;Returning naive datetime %s on field %s&#34;, e.local_dt, self.name)
                     return e.local_dt
                 log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
                 return None
@@ -3063,9 +3070,10 @@ the recurring item is a task or a calendar item.</p>
     def __init__(self, *args, **kwargs):
         # Not all fields assume a default time of 00:00, so make this configurable
         self._default_time = kwargs.pop(&#34;default_time&#34;, datetime.time(0, 0))
-        super().__init__(*args, **kwargs)
         # Create internal field to handle datetime-only logic
         self._datetime_field = DateTimeField(*args, **kwargs)
+        kwargs.pop(&#34;allow_naive&#34;, None)
+        super().__init__(*args, **kwargs)
 
     def date_to_datetime(self, value):
         return self._datetime_field.value_cls.combine(value, self._default_time).replace(tzinfo=UTC)
@@ -3138,6 +3146,10 @@ the recurring item is a task or a calendar item.</p>
 
     value_cls = EWSDateTime
 
+    def __init__(self, *args, **kwargs):
+        self.allow_naive = kwargs.pop(&#34;allow_naive&#34;, False)
+        super().__init__(*args, **kwargs)
+
     def clean(self, value, version=None):
         if isinstance(value, datetime.datetime):
             if not value.tzinfo:
@@ -3159,8 +3171,10 @@ the recurring item is a task or a calendar item.</p>
                         tz = account.default_timezone
                         log.info(&#34;Found naive datetime %s on field %s. Assuming timezone %s&#34;, e.local_dt, self.name, tz)
                         return e.local_dt.replace(tzinfo=tz)
-                    # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
-                    log.warning(&#34;Returning naive datetime %s on field %s&#34;, e.local_dt, self.name)
+                    if not self.allow_naive:
+                        # There&#39;s nothing we can do but return the naive date. It&#39;s better than assuming e.g. UTC.
+                        # Making this a hard error is probably too risky. Warn instead.
+                        log.warning(&#34;Returning naive datetime %s on field %s&#34;, e.local_dt, self.name)
                     return e.local_dt
                 log.info(&#34;Cannot convert value &#39;%s&#39; on field &#39;%s&#39; to type %s&#34;, val, self.name, self.value_cls)
                 return None

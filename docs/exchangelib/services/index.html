@@ -5315,7 +5315,7 @@ ExchangeImpersonation allows to act as the user we want to impersonate.</p>
 </dd>
 <dt id="exchangelib.services.GetUserAvailability"><code class="flex name class">
 <span>class <span class="ident">GetUserAvailability</span></span>
-<span>(</span><span>protocol, chunk_size=None, timeout=None)</span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get detailed availability information for a list of users.
@@ -5333,9 +5333,14 @@ MSDN:
 
     SERVICE_NAME = &#34;GetUserAvailability&#34;
 
-    def call(self, mailbox_data, timezone, free_busy_view_options):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tzinfo = None
+
+    def call(self, tzinfo, mailbox_data, timezone, free_busy_view_options):
         # TODO: Also supports SuggestionsViewOptions, see
         #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+        self.tzinfo = tzinfo
         return self._elems_to_objs(
             self._chunked_get_elements(
                 self.get_payload,
@@ -5345,8 +5350,13 @@ MSDN:
             )
         )
 
+    @property
+    def _timezone(self):
+        return self.tzinfo
+
     def _elem_to_obj(self, elem):
-        return FreeBusyView.from_xml(elem=elem, account=None)
+        fake_account = namedtuple(&#34;Account&#34;, [&#34;default_timezone&#34;])(default_timezone=self.tzinfo)
+        return FreeBusyView.from_xml(elem=elem, account=fake_account)
 
     def get_payload(self, mailbox_data, timezone, free_busy_view_options):
         payload = create_element(f&#34;m:{self.SERVICE_NAME}Request&#34;)
@@ -5391,7 +5401,7 @@ MSDN:
 <h3>Methods</h3>
 <dl>
 <dt id="exchangelib.services.GetUserAvailability.call"><code class="name flex">
-<span>def <span class="ident">call</span></span>(<span>self, mailbox_data, timezone, free_busy_view_options)</span>
+<span>def <span class="ident">call</span></span>(<span>self, tzinfo, mailbox_data, timezone, free_busy_view_options)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5399,9 +5409,10 @@ MSDN:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call(self, mailbox_data, timezone, free_busy_view_options):
+<pre><code class="python">def call(self, tzinfo, mailbox_data, timezone, free_busy_view_options):
     # TODO: Also supports SuggestionsViewOptions, see
     #  https://docs.microsoft.com/en-us/exchange/client-developer/web-service-reference/suggestionsviewoptions
+    self.tzinfo = tzinfo
     return self._elems_to_objs(
         self._chunked_get_elements(
             self.get_payload,

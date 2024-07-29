@@ -1857,7 +1857,8 @@ class AbsoluteDateTransition(BaseTransition):
 
     ELEMENT_NAME = "AbsoluteDateTransition"
 
-    date = DateTimeBackedDateField(field_uri="DateTime")
+    # Values are returned as naive, and we have no timezone to hook up the values to yet
+    date = DateTimeBackedDateField(field_uri="DateTime", allow_naive=True)
 
 
 class RecurringDayTransition(BaseTransition):

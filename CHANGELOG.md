@@ -5,6 +5,12 @@ HEAD
 ----
 
 
+5.4.2
+-----
+- Remove timezone warnings in `GetUserAvailability`
+- Update `NoVerifyHTTPAdapter` for newer requests versions
+
+
 5.4.1
 -----
 - Fix traversal of public folders in `Account.public_folders_root`
