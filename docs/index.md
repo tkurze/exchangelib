@@ -199,18 +199,21 @@ johns_account = Account(
 ```
 
 If you want to impersonate an account and access a shared folder that this
-account has access to, you need to specify the email adress of the shared
+account has access to, you need to specify the email address of the shared
 folder to access the folder:
 
 ```python
-from exchangelib.folders import Calendar, SingleFolderQuerySet
+from exchangelib.folders import Calendar, Folder, SingleFolderQuerySet
 from exchangelib.properties import DistinguishedFolderId, Mailbox
 
 shared_calendar = SingleFolderQuerySet(
     account=johns_account,
-    folder=DistinguishedFolderId(
-        id=Calendar.DISTINGUISHED_FOLDER_ID,
-        mailbox=Mailbox(email_address="mary@example.com"),
+    folder=Folder(
+        root=johns_account.root,
+        _distinguished_id=DistinguishedFolderId(
+            id=Calendar.DISTINGUISHED_FOLDER_ID,
+            mailbox=Mailbox(email_address="mary@example.com"),
+        ),
     ),
 ).resolve()
 ```
