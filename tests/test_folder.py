@@ -500,6 +500,18 @@ class FolderTest(EWSTest):
                 ).get_folders()
             )
 
+    def test_shared_folders(self):
+        # Test that the custom 'email_address' is not overwritten. The test account does not have access to any shared
+        # accounts, so we can't expand the test to actual queries.
+        shared_folder = Folder(
+            root=self.account.root,
+            _distinguished_id=DistinguishedFolderId(
+                id=Inbox.DISTINGUISHED_FOLDER_ID,
+                mailbox=Mailbox(email_address="foo@example.com"),
+            ),
+        )
+        self.assertEqual(shared_folder._distinguished_id.mailbox.email_address, "foo@example.com")
+
     def test_folder_grouping(self):
         # If you get errors here, you probably need to fill out [folder class].LOCALIZED_NAMES for your locale.
         for f in self.account.root.walk():
