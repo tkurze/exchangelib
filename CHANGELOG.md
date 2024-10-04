@@ -5,6 +5,11 @@ HEAD
 ----
 
 
+5.4.3
+-----
+- Fix access to shared folders
+
+
 5.4.2
 -----
 - Remove timezone warnings in `GetUserAvailability`

@@ -96,7 +96,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
         self.item_sync_state = kwargs.pop("item_sync_state", None)
         self.folder_sync_state = kwargs.pop("folder_sync_state", None)
         super().__init__(**kwargs)
-        if self._distinguished_id and self.account:
+        if self._distinguished_id and not self._distinguished_id.mailbox and self.account:
+            # Ensure that distinguished IDs have a mailbox, but don't override a custom mailbox (e.g. shared folders)
             self._distinguished_id.mailbox = Mailbox(email_address=self.account.primary_smtp_address)
 
     @property

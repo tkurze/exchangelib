@@ -35,6 +35,9 @@ class OofSettings(EWSElement):
                 raise ValueError("'start' must be before 'end'")
             if self.end < datetime.datetime.now(tz=UTC):
                 raise ValueError("'end' must be in the future")
+            # Some servers only like UTC timestamps
+            self.start = self.start.astimezone(UTC)
+            self.end = self.end.astimezone(UTC)
         if self.state != self.DISABLED and (not self.internal_reply or not self.external_reply):
             raise ValueError(f"'internal_reply' and 'external_reply' must be set when state is not {self.DISABLED!r}")
 
