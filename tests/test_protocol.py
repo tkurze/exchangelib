@@ -334,7 +334,7 @@ EWS auth: NTLM""",
         ws = GetServerTimeZones(self.account.protocol)
         timezones = list(ws.parse(xml))
         self.assertEqual(1, len(timezones))
-        (standard_transition, daylight_transition, standard_period) = timezones[0].get_std_and_dst(2022)
+        standard_transition, daylight_transition, standard_period = timezones[0].get_std_and_dst(2022)
         self.assertEqual(
             standard_transition,
             StandardTime(bias=0, time=datetime.time(hour=3), occurrence=5, iso_month=10, weekday=7),
@@ -917,8 +917,7 @@ EWS auth: NTLM""",
 
         # Smash TLS verification using an untrusted certificate
         with tempfile.NamedTemporaryFile() as f:
-            f.write(
-                b"""\
+            f.write(b"""\
  -----BEGIN CERTIFICATE-----
 MIIENzCCAx+gAwIBAgIJAOYfYfw7NCOcMA0GCSqGSIb3DQEBBQUAMIGxMQswCQYD
 VQQGEwJVUzERMA8GA1UECAwITWFyeWxhbmQxFDASBgNVBAcMC0ZvcmVzdCBIaWxs
@@ -943,8 +942,7 @@ T9vsI3C+Nzn84DINgI9mx6yktIt3QOKZRDpzyPkUzxsyJ8J427DaimDrjTR+fTwD
 1Dh09xeeMnSa5zeV1HEDyJTqCXutLetwQ/IyfmMBhIx+nvB5f67pz/m+Dv6V0r3I
 p4HCcdnDUDGJbfqtoqsAATQQWO+WWuswB6mOhDbvPTxhRpZq6AkgWqv4S+u3M2GO
 r5p9FrBgavAw5bKO54C0oQKpN/5fta5l6Ws0
------END CERTIFICATE-----"""
-            )
+-----END CERTIFICATE-----""")
             try:
                 os.environ["REQUESTS_CA_BUNDLE"] = f.name
                 # Setting the credentials is just an easy way of resetting the session pool. This will let requests

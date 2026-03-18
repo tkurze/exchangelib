@@ -56,14 +56,12 @@ class VersionTest(TimedTestCase):
         # Test fallback to suggested api_version value when there is a version mismatch and response version is fishy
         version = Version.from_soap_header(
             "Exchange2007",
-            to_xml(
-                b"""\
+            to_xml(b"""\
 <s:Header>
     <h:ServerVersionInfo
         MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1" Version="V2016_10_10"
         xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"/>
-</s:Header>"""
-            ),
+</s:Header>"""),
         )
         self.assertEqual(version.api_version, EXCHANGE_2007.api_version())
         self.assertEqual(version.api_version, "Exchange2007")
@@ -72,14 +70,12 @@ class VersionTest(TimedTestCase):
         # Test that override the suggested version if the response version is not fishy
         version = Version.from_soap_header(
             "Exchange2013",
-            to_xml(
-                b"""\
+            to_xml(b"""\
 <s:Header>
     <h:ServerVersionInfo
         MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1" Version="HELLO_FROM_EXCHANGELIB"
         xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"/>
-</s:Header>"""
-            ),
+</s:Header>"""),
         )
         self.assertEqual(version.api_version, "HELLO_FROM_EXCHANGELIB")
 
@@ -87,14 +83,12 @@ class VersionTest(TimedTestCase):
         # present in the response
         version = Version.from_soap_header(
             "Exchange2013",
-            to_xml(
-                b"""\
+            to_xml(b"""\
 <s:Header>
     <h:ServerVersionInfo
         MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1"
         xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"/>
-</s:Header>"""
-            ),
+</s:Header>"""),
         )
         self.assertEqual(version.api_version, "Exchange2016")
 
@@ -102,14 +96,12 @@ class VersionTest(TimedTestCase):
         # there was no suggested version.
         version = Version.from_soap_header(
             None,
-            to_xml(
-                b"""\
+            to_xml(b"""\
 <s:Header>
     <h:ServerVersionInfo
         MajorBuildNumber="845" MajorVersion="15" MinorBuildNumber="22" MinorVersion="1"
         xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"/>
-</s:Header>"""
-            ),
+</s:Header>"""),
         )
         self.assertEqual(version.api_version, "Exchange2016")
 
@@ -117,23 +109,19 @@ class VersionTest(TimedTestCase):
         with self.assertRaises(TransportError) as e:
             Version.from_soap_header(
                 "Exchange2013",
-                to_xml(
-                    b"""\
+                to_xml(b"""\
 <s:Header>
     <foo/>
-</s:Header>"""
-                ),
+</s:Header>"""),
             )
         self.assertIn("No ServerVersionInfo in header", e.exception.args[0])
         with self.assertRaises(TransportError) as e:
             Version.from_soap_header(
                 "Exchange2013",
-                to_xml(
-                    b"""\
+                to_xml(b"""\
 <s:Header>
     <h:ServerVersionInfo MajorBuildNumber="845" MajorVersion="15" Version="V2016_10_10"
         xmlns:h="http://schemas.microsoft.com/exchange/services/2006/types"/>
-</s:Header>"""
-                ),
+</s:Header>"""),
             )
         self.assertIn("Bad ServerVersionInfo in response", e.exception.args[0])

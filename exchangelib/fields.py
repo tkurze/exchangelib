@@ -750,8 +750,7 @@ class TimeZoneField(FieldURIField):
             try:
                 return self.value_cls.from_ms_id(tz_id)
             except UnknownTimeZone:
-                warnings.warn(
-                    f"""\
+                warnings.warn(f"""\
 Cannot convert value {tz_id!r} on field {self.name!r} to type {self.value_cls.__name__!r} (unknown timezone ID).
 You can fix this by adding a custom entry into the timezone translation map:
 
@@ -760,8 +759,7 @@ from exchangelib.winzone import MS_TIMEZONE_TO_IANA_MAP, CLDR_TO_MS_TIMEZONE_MAP
 # Replace "Some_Region/Some_Location" with a reasonable value from CLDR_TO_MS_TIMEZONE_MAP.keys()
 MS_TIMEZONE_TO_IANA_MAP[{tz_id!r}] = "Some_Region/Some_Location"
 
-# Your code here"""
-                )
+# Your code here""")
                 return None
         return self.default
 

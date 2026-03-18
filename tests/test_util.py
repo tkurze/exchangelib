@@ -176,16 +176,12 @@ class UtilTest(EWSTest):
     def test_anonymizing_handler(self):
         h = AnonymizingXmlHandler(forbidden_strings=("XXX", "yyy"))
         self.assertEqual(
-            xml_to_str(
-                h.parse_bytes(
-                    b"""\
+            xml_to_str(h.parse_bytes(b"""\
 <Root>
   <t:ItemId Id="AQApA=" ChangeKey="AQAAAB"/>
   <Foo>XXX</Foo>
   <Foo><Bar>Hello yyy world</Bar></Foo>
-</Root>"""
-                )
-            ),
+</Root>""")),
             """\
 <Root>
   <t:ItemId Id="DEADBEEF=" ChangeKey="DEADBEEF="/>

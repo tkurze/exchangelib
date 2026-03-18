@@ -417,27 +417,21 @@ class ExtendedPropertyTest(BaseItemTest):
             property_name = "Test Property"
             property_type = "String"
 
-        elem = to_xml(
-            b"""\
+        elem = to_xml(b"""\
 <ExtendedProperty xmlns="http://schemas.microsoft.com/exchange/services/2006/types">
     <ExtendedFieldURI/>
     <Value>XXX</Value>
-</ExtendedProperty>"""
-        )
+</ExtendedProperty>""")
         self.assertEqual(TestProp.from_xml(elem, account=None), "XXX")
-        elem = to_xml(
-            b"""\
+        elem = to_xml(b"""\
 <ExtendedProperty xmlns="http://schemas.microsoft.com/exchange/services/2006/types">
     <ExtendedFieldURI/>
     <Value></Value>
-</ExtendedProperty>"""
-        )
+</ExtendedProperty>""")
         self.assertEqual(TestProp.from_xml(elem, account=None), "")
-        elem = to_xml(
-            b"""\
+        elem = to_xml(b"""\
 <ExtendedProperty xmlns="http://schemas.microsoft.com/exchange/services/2006/types">
     <ExtendedFieldURI/>
     <Value/>
-</ExtendedProperty>"""
-        )
+</ExtendedProperty>""")
         self.assertEqual(TestProp.from_xml(elem, account=None), "")

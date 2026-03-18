@@ -1710,13 +1710,10 @@ message.body = HTMLBody(
     '<html><body>Hello logo: <img src="cid:%s"></body></html>' % logo_filename
 )
 # Gmail needs this additional img attribute
-message.body = HTMLBody(
-    """\
+message.body = HTMLBody("""\
 <html>
   <body>Hello logo: <img data-imagetype="AttachmentByCid" src="cid:%s"></body>
-</html>"""
-    % logo_filename
-)
+</html>""" % logo_filename)
 ```
 
 Attachments cannot be updated via EWS. If you want to change an attachment,
