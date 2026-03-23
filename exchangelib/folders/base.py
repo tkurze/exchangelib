@@ -490,6 +490,8 @@ class BaseFolder(RegisterMixIn, SearchableMixIn, SupportedVersionClassMixIn, met
                     f.delete()
                 except ErrorDeleteDistinguishedFolder:
                     log.warning("Tried to delete a distinguished folder (%s)", f)
+                except ErrorCannotDeleteObject:
+                    log.warning("Failed to delete folder (%s)", f)
 
     def test_access(self):
         """Does a simple FindItem to test (read) access to the folder. Maybe the account doesn't exist, maybe the
